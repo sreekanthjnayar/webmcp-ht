@@ -2,6 +2,8 @@
 
 A WebMCP-powered system design studio. You assemble an architecture from blocks, run a traffic simulation, and an agent in the same tab can read the graph, rewire it, and prove a fix with the next run.
 
+**Live app:** [webmcp-ht.vercel.app](https://webmcp-ht.vercel.app/)
+
 ## Use cases
 
 Each case loads a first-sketch architecture that **misses** its SLO. Rewire it, scale replicas, then hit Run.
