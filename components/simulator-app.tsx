@@ -7,6 +7,7 @@ import { Inspector } from "@/components/inspector";
 import { Palette } from "@/components/palette";
 import { StudioHeader } from "@/components/studio-header";
 import { WebMcpTools } from "@/components/webmcp-tools";
+import { WelcomeOverlay } from "@/components/welcome-overlay";
 import { sanitizeGraph } from "@/lib/graph";
 import { useArchitectureStore } from "@/lib/store";
 
@@ -20,6 +21,7 @@ export function SimulatorApp() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]">
       <WebMcpTools />
       <ConfirmDialog />
+      <WelcomeOverlay />
       <StudioHeader />
       <GraphIssueBanner issues={issues} />
       <RunDeltaBanner delta={sim?.delta} />
