@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-const AUTO_HIDE_MS = 9000;
-const FADE_MS = 500;
+const AUTO_HIDE_MS = 8000;
+const FADE_MS = 450;
 
 export function WelcomeOverlay() {
   const [visible, setVisible] = useState(true);
@@ -18,31 +18,39 @@ export function WelcomeOverlay() {
   }
 
   useEffect(() => {
-    const t = window.setTimeout(dismiss, AUTO_HIDE_MS);
-    return () => window.clearTimeout(t);
+    const hide = window.setTimeout(dismiss, AUTO_HIDE_MS);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(hide);
+      window.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   if (!visible) return null;
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#0b0d10]/78 p-6 backdrop-blur-[6px] transition-opacity duration-500"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[#0b0d10]/80 p-6 backdrop-blur-[8px] transition-opacity duration-500"
       style={{ opacity: leaving ? 0 : 1 }}
       onClick={dismiss}
       role="dialog"
       aria-modal="true"
       aria-labelledby="archflow-welcome-title"
     >
-      <div className="max-w-[28rem] text-center" onClick={(e) => e.stopPropagation()}>
-        <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)]">Archflow</div>
-        <h1 id="archflow-welcome-title" className="mt-3 text-[22px] leading-snug text-[var(--text)]">
-          A shared studio for designing systems together.
+      <div className="max-w-[26rem] text-center" onClick={(e) => e.stopPropagation()}>
+        <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">Archflow</div>
+        <div className="mx-auto mt-4 h-px w-10 bg-[var(--accent)]/70" />
+        <h1 id="archflow-welcome-title" className="mt-5 text-[22px] leading-snug tracking-[-0.02em] text-[var(--text)]">
+          Learn system design together.
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--muted)]">
-          You sketch the architecture. An agent can read the same graph, suggest changes, and run
-          the traffic with you. A visual, collaborative way to learn what holds — and what breaks.
+          A visual studio where you and an agent share one canvas. Sketch the architecture, run the
+          traffic, and take turns making it stronger.
         </p>
-        <button type="button" className="arch-btn-primary mt-6" onClick={dismiss}>
+        <button type="button" className="arch-btn-primary mt-7" onClick={dismiss}>
           Begin
         </button>
       </div>
