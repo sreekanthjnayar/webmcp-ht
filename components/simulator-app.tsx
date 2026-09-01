@@ -14,8 +14,6 @@ export function SimulatorApp() {
   const runSimulation = useArchitectureStore((s) => s.runSimulation);
   const sim = useArchitectureStore((s) => s.sim);
   const challenge = useArchitectureStore((s) => s.challenge());
-  const webmcp =
-    typeof document !== "undefined" && document.modelContext ? "ready" : "missing";
 
   return (
     <div className="flex h-dvh min-h-0 flex-col bg-[var(--bg)] text-[var(--text)]">
@@ -69,9 +67,7 @@ export function SimulatorApp() {
       </div>
 
       <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-[var(--line)] px-4 py-1.5 text-[11px] text-[var(--muted)]">
-        <span>
-          WebMCP {webmcp === "ready" ? "tools registered" : webmcp === "missing" ? "runtime missing — polyfill should attach on load" : "…"}
-        </span>
+        <span>WebMCP tools are registered on this page for ChatGPT / Chrome agents.</span>
         <span className="max-md:hidden">
           Human assembles the sketch. Agent can read the graph, rewire blocks, and re-run.
         </span>

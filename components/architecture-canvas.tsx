@@ -14,6 +14,7 @@ import { useCallback } from "react";
 import { BlockNode } from "@/components/block-node";
 import { PacketEdge } from "@/components/packet-edge";
 import type { ArchEdge, ArchNode } from "@/lib/graph";
+import { PALETTE_ORDER } from "@/lib/catalog";
 import type { BlockKind } from "@/lib/types";
 import { useArchitectureStore } from "@/lib/store";
 
@@ -31,6 +32,16 @@ function CanvasInner() {
   const challengeId = useArchitectureStore((s) => s.challengeId);
   const { screenToFlowPosition } = useReactFlow();
 
+  const placeKind = useCallback(
+    (event: React.DragEvent | React.MouseEvent, kind: BlockKind, clientX?: number, clientY?: number) => {
+      const x = clientX ?? ("clientX" in event ? event.clientX : 0);
+      const y = clientY ?? ("clientY" in event ? event.clientY : 0);
+      const position = screenToFlowPosition({ x, y });
+      addNode(kind, position, { actor: "human" });
+    },
+    [addNode, screenToFlowPosition],
+  );
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -39,12 +50,12 @@ function CanvasInner() {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const kind = event.dataTransfer.getData("application/archflow-kind") as BlockKind;
-      if (!kind) return;
-      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      addNode(kind, position, { actor: "human" });
+      const kind = (event.dataTransfer.getData("application/archflow-kind") ||
+        event.dataTransfer.getData("text/plain")) as BlockKind;
+      if (!PALETTE_ORDER.includes(kind)) return;
+      placeKind(event, kind, event.clientX, event.clientY);
     },
-    [addNode, screenToFlowPosition],
+    [placeKind],
   );
 
   return (
@@ -88,10 +99,12 @@ function CanvasInner() {
 
 export function ArchitectureCanvas() {
   return (
-    <div className="relative min-h-0 min-w-0 flex-1">
-      <ReactFlowProvider>
-        <CanvasInner />
-      </ReactFlowProvider>
+    <div className="relative min-h-[320px] min-w-0 flex-1">
+      <div className="absolute inset-0">
+        <ReactFlowProvider>
+          <CanvasInner />
+        </ReactFlowProvider>
+      </div>
     </div>
   );
 }
