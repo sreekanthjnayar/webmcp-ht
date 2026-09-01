@@ -4,7 +4,6 @@ import {
   Background,
   Controls,
   MiniMap,
-  Panel,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -13,6 +12,7 @@ import {
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo } from "react";
 import { BlockNode } from "@/components/block-node";
+import { CanvasToolbar } from "@/components/canvas-toolbar";
 import { PacketEdge } from "@/components/packet-edge";
 import { PALETTE_ORDER, specOf } from "@/lib/catalog";
 import { normalizeNode, type ArchEdge, type ArchNode } from "@/lib/graph";
@@ -30,7 +30,6 @@ function CanvasInner() {
   const onConnect = useArchitectureStore((s) => s.onConnect);
   const selectNode = useArchitectureStore((s) => s.selectNode);
   const addNode = useArchitectureStore((s) => s.addNode);
-  const arrangeLayers = useArchitectureStore((s) => s.arrangeLayers);
   const selectedNodeId = useArchitectureStore((s) => s.selectedNodeId);
   const challengeId = useArchitectureStore((s) => s.challengeId);
   const layoutNonce = useArchitectureStore((s) => s.layoutNonce);
@@ -114,11 +113,6 @@ function CanvasInner() {
       defaultEdgeOptions={{ type: "packet" }}
     >
       <Background gap={22} size={1} color="var(--grid)" />
-      <Panel position="top-left" className="m-2">
-        <button type="button" className="arch-btn bg-[var(--panel)]" onClick={() => arrangeLayers("human")}>
-          Arrange layers
-        </button>
-      </Panel>
       <Controls showInteractive={false} />
       <MiniMap
         pannable
@@ -132,11 +126,14 @@ function CanvasInner() {
 
 export function ArchitectureCanvas() {
   return (
-    <div className="relative min-h-[320px] min-w-0 flex-1">
-      <div className="absolute inset-0">
-        <ReactFlowProvider>
-          <CanvasInner />
-        </ReactFlowProvider>
+    <div className="flex min-h-[320px] min-w-0 flex-1 flex-col">
+      <CanvasToolbar />
+      <div className="relative min-h-0 flex-1">
+        <div className="absolute inset-0">
+          <ReactFlowProvider>
+            <CanvasInner />
+          </ReactFlowProvider>
+        </div>
       </div>
     </div>
   );

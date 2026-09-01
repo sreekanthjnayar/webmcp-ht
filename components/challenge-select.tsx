@@ -28,20 +28,18 @@ export function ChallengeSelect() {
   }, []);
 
   return (
-    <div ref={rootRef} className="relative min-w-[220px] max-w-sm flex-1">
-      <div className="mb-1 text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Use case</div>
+    <div ref={rootRef} className="relative ml-auto shrink-0">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-3 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-3 py-1.5 text-left hover:border-[var(--accent)]/40"
+        className="flex h-7 max-w-[260px] items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--panel-2)] px-2.5 text-left hover:border-[var(--accent)]/40"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
+        aria-label={`Use case: ${challenge.title}`}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="min-w-0">
-          <span className="block truncate text-[12px] text-[var(--text)]">{challenge.title}</span>
-          <span className="block truncate text-[10px] text-[var(--muted)]">{challenge.subtitle}</span>
-        </span>
+        <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">Use case</span>
+        <span className="min-w-0 truncate text-[12px] text-[var(--text)]">{challenge.title}</span>
         <Chevron open={open} />
       </button>
       {open ? (
@@ -49,7 +47,7 @@ export function ChallengeSelect() {
           id={listId}
           role="listbox"
           aria-label="System design tutorials"
-          className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-[var(--line)] bg-[var(--panel-2)] py-1 shadow-[0_12px_32px_rgba(0,0,0,0.4)]"
+          className="absolute right-0 z-30 mt-1 w-[260px] overflow-hidden rounded-md border border-[var(--line)] bg-[var(--panel-2)] py-1 shadow-[0_12px_32px_rgba(0,0,0,0.4)]"
         >
           {CHALLENGES.map((c) => {
             const selected = c.id === challengeId;

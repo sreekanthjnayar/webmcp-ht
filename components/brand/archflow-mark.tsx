@@ -32,15 +32,15 @@ export function ArchflowWordmark({ className = "" }: { className?: string }) {
   );
 }
 
-export function ArchflowLockup() {
+export function ArchflowLockup({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex min-w-0 items-center gap-2.5">
-      <ArchflowMark className="h-8 w-8 shrink-0" title="Archflow" />
+    <div className="flex min-w-0 items-center gap-2">
+      <ArchflowMark className={compact ? "h-6 w-6 shrink-0" : "h-8 w-8 shrink-0"} title="Archflow" />
       <div className="min-w-0 leading-tight">
-        <div className="text-[14px] font-medium">
+        <div className={compact ? "text-[13px] font-medium" : "text-[14px] font-medium"}>
           <ArchflowWordmark />
         </div>
-        <div className="text-[11px] text-[var(--muted)]">System design studio</div>
+        {compact ? null : <div className="text-[11px] text-[var(--muted)]">System design studio</div>}
       </div>
     </div>
   );
