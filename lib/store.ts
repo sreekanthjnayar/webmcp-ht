@@ -116,12 +116,19 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
   },
   onNodesChange: (changes) => {
     const removed = changes.filter((c) => c.type === "remove").map((c) => c.id);
+    const selectChanges = changes.filter((c) => c.type === "select");
+    let selectedNodeId = get().selectedNodeId;
+    if (selectChanges.length) {
+      const picked = selectChanges.find((c) => c.type === "select" && c.selected);
+      selectedNodeId = picked && picked.type === "select" ? picked.id : null;
+    }
+    if (removed.includes(selectedNodeId ?? "")) selectedNodeId = null;
     set({
       nodes: applyNodeChanges(changes, get().nodes) as ArchNode[],
       edges: removed.length
         ? (get().edges.filter((e) => !removed.includes(e.source) && !removed.includes(e.target)) as ArchEdge[])
         : get().edges,
-      selectedNodeId: removed.includes(get().selectedNodeId ?? "") ? null : get().selectedNodeId,
+      selectedNodeId,
     });
   },
   onEdgesChange: (changes) => {

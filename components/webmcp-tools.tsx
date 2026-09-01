@@ -6,7 +6,7 @@ import { CHALLENGES } from "@/lib/challenges";
 import { beside, defaultAddPosition } from "@/lib/layout";
 import { useArchitectureStore } from "@/lib/store";
 import { BLOCK_KINDS, type BlockKind, type FindingSeverity, type Protocol } from "@/lib/types";
-import { formatArchitecture, formatCatalog } from "@/lib/webmcp-format";
+import { formatArchitecture, formatCatalog, formatSelectedNode } from "@/lib/webmcp-format";
 
 function getStore() {
   return useArchitectureStore.getState();
@@ -33,6 +33,17 @@ export function WebMcpTools() {
     description: "List block types you can add, their default capacity, and connection rules.",
     annotations: { readOnlyHint: true },
     execute: async () => json(formatCatalog()),
+  });
+
+  useWebMCP({
+    name: "get_selected_node",
+    description:
+      "Return the block the human currently has selected on the canvas, what that kind of block means, its connection rules, neighbors, and last-run stats for it. Call this when they ask about the selected node.",
+    annotations: { readOnlyHint: true },
+    execute: async () => {
+      const s = getStore();
+      return json(formatSelectedNode(s.nodes, s.edges, s.selectedNodeId, s.sim));
+    },
   });
 
   useWebMCP({

@@ -25,7 +25,7 @@ Twenty-two blocks, grouped in the palette: **Edge** (client, DNS, WAF, CDN, load
 
 ## Human + agent
 
-This is not a chatbot next to a diagram. The page registers WebMCP tools (`get_architecture`, `add_node`, `connect`, `run_simulation`, …). In [ChatGPT’s in-app browser](https://webmcp.devpost.com/) or Chrome with `chrome://flags/#enable-webmcp-testing`, ask:
+This is not a chatbot next to a diagram. The page registers WebMCP tools (`get_architecture`, `get_selected_node`, `add_node`, `connect`, `run_simulation`, …). `get_selected_node` returns the block the human clicked and what that kind of block means. In [ChatGPT’s in-app browser](https://webmcp.devpost.com/) or Chrome with `chrome://flags/#enable-webmcp-testing`, ask:
 
 > Inspect this URL shortener. Make it pass the SLO.
 

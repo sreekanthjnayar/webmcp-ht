@@ -3,7 +3,7 @@ import type { ArchEdge, ArchNode } from "./graph";
 export const NODE_W = 220;
 export const NODE_H = 124;
 export const GAP_X = 96;
-export const GAP_Y = 52;
+export const GAP_Y = 72;
 export const ORIGIN_X = 48;
 export const ORIGIN_Y = 64;
 

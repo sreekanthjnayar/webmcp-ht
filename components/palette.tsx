@@ -15,13 +15,13 @@ export function Palette() {
           Click to add, or drag onto the canvas. Colors mark the block kind. Connect left to right.
         </p>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto px-2 pb-3 max-md:flex max-md:gap-6 max-md:overflow-x-auto">
+      <div className="min-h-0 flex-1 overflow-auto px-2 pb-4 max-md:flex max-md:gap-6 max-md:overflow-x-auto">
         {PALETTE_GROUPS.map((group) => (
-          <div key={group.title} className="mb-3 max-md:mb-0 max-md:min-w-[180px]">
-            <div className="px-2 pb-1 text-[10px] uppercase tracking-[0.14em]" style={{ color: group.accent }}>
+          <div key={group.title} className="mb-5 max-md:mb-0 max-md:min-w-[180px]">
+            <div className="px-2 pb-2 pt-1 text-[10px] uppercase tracking-[0.14em]" style={{ color: group.accent }}>
               {group.title}
             </div>
-            <div className="space-y-0.5 max-md:flex max-md:gap-1">
+            <div className="flex flex-col gap-2.5 max-md:flex-row max-md:gap-2">
               {group.kinds.map((kind) => (
                 <PaletteTile key={kind} kind={kind} />
               ))}
@@ -64,7 +64,7 @@ function PaletteTile({ kind }: { kind: BlockKind }) {
         event.dataTransfer.setData("text/plain", kind);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className="flex w-full min-w-[160px] cursor-grab items-start gap-2 rounded-md px-2 py-1.5 text-left hover:brightness-110 active:cursor-grabbing"
+      className="flex w-full min-w-[160px] cursor-grab items-start gap-2 rounded-md px-2 py-2.5 text-left hover:brightness-110 active:cursor-grabbing"
       style={{
         background: `color-mix(in srgb, ${spec.accent} 12%, transparent)`,
         boxShadow: `inset 3px 0 0 ${spec.accent}`,
