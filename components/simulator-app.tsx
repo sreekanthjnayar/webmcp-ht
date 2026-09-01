@@ -17,7 +17,7 @@ export function SimulatorApp() {
   const challenge = useArchitectureStore((s) => s.challenge());
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col bg-[var(--bg)] text-[var(--text)]">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]">
       <WebMcpTools />
       <ConfirmDialog />
       <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-2.5">

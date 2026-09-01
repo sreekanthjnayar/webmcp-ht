@@ -15,7 +15,7 @@ export function Inspector() {
 
   return (
     <aside className="flex h-full min-h-0 w-[320px] shrink-0 flex-col border-l border-[var(--line)] bg-[var(--panel)] max-md:w-full max-md:border-l-0 max-md:border-t">
-      <div className="arch-scroll min-h-0 flex-1">
+      <div className="arch-scroll min-h-0 flex-1" style={{ overflow: "auto" }}>
         {node ? (
           <section className="border-b border-[var(--line)] px-4 py-4">
             <div
