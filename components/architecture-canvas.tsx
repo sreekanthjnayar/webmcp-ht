@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -29,6 +30,7 @@ function CanvasInner() {
   const onConnect = useArchitectureStore((s) => s.onConnect);
   const selectNode = useArchitectureStore((s) => s.selectNode);
   const addNode = useArchitectureStore((s) => s.addNode);
+  const arrangeLayers = useArchitectureStore((s) => s.arrangeLayers);
   const selectedNodeId = useArchitectureStore((s) => s.selectedNodeId);
   const challengeId = useArchitectureStore((s) => s.challengeId);
   const layoutNonce = useArchitectureStore((s) => s.layoutNonce);
@@ -104,6 +106,11 @@ function CanvasInner() {
       defaultEdgeOptions={{ type: "packet" }}
     >
       <Background gap={22} size={1} color="var(--grid)" />
+      <Panel position="top-left" className="m-2">
+        <button type="button" className="arch-btn bg-[var(--panel)]" onClick={() => arrangeLayers("human")}>
+          Arrange layers
+        </button>
+      </Panel>
       <Controls showInteractive={false} />
       <MiniMap
         pannable

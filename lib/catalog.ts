@@ -283,21 +283,25 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
   },
 };
 
-export const PALETTE_GROUPS: { title: string; kinds: BlockKind[] }[] = [
+export const PALETTE_GROUPS: { title: string; accent: string; kinds: BlockKind[] }[] = [
   {
     title: "Edge",
+    accent: "#22d3ee",
     kinds: ["client", "dns", "waf", "cdn", "load_balancer", "api_gateway", "rate_limiter"],
   },
   {
     title: "App",
+    accent: "#60a5fa",
     kinds: ["auth", "websocket_gateway", "api", "search", "ranker", "transcoder"],
   },
   {
     title: "Data",
+    accent: "#f59e0b",
     kinds: ["cache", "database", "read_replica", "object_store"],
   },
   {
     title: "Async",
+    accent: "#a78bfa",
     kinds: ["queue", "pubsub", "worker", "stream_processor", "notification"],
   },
 ];

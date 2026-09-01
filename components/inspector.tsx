@@ -18,12 +18,18 @@ export function Inspector() {
       <div className="min-h-0 flex-1 overflow-auto">
         {node ? (
           <section className="border-b border-[var(--line)] px-4 py-4">
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 rounded-md px-2 py-1.5"
+              style={{ background: `color-mix(in srgb, ${CATALOG[node.data.kind].accent} 16%, transparent)` }}
+            >
               <span
-                className="h-3 w-3 shrink-0 rounded-sm"
+                className="h-3.5 w-3.5 shrink-0 rounded-sm"
                 style={{ background: CATALOG[node.data.kind].accent }}
               />
-              <div className="text-[10px] uppercase tracking-[0.16em]" style={{ color: CATALOG[node.data.kind].accent }}>
+              <div
+                className="text-[10px] uppercase tracking-[0.16em]"
+                style={{ color: CATALOG[node.data.kind].accent }}
+              >
                 {CATALOG[node.data.kind].label}
               </div>
             </div>

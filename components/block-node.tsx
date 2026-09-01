@@ -23,8 +23,8 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
     data.kind === "client" || data.rpsCapacity <= 0
       ? "∞"
       : `${(data.replicas * data.rpsCapacity).toLocaleString()} rps`;
-  const fill = `color-mix(in srgb, ${spec.accent} ${selected ? 22 : 14}%, #12161c)`;
-  const border = `color-mix(in srgb, ${spec.accent} ${selected ? 78 : 46}%, #2a303a)`;
+  const fill = `color-mix(in srgb, ${spec.accent} ${selected ? 34 : 24}%, #10151c)`;
+  const border = `color-mix(in srgb, ${spec.accent} ${selected ? 88 : 58}%, #1c222c)`;
 
   return (
     <div
@@ -33,8 +33,8 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
         borderColor: border,
         background: fill,
         boxShadow: selected
-          ? `0 0 0 1px color-mix(in srgb, ${spec.accent} 55%, transparent), 0 12px 28px rgba(0,0,0,0.4)`
-          : "0 8px 20px rgba(0,0,0,0.28)",
+          ? `0 0 0 1px ${spec.accent}, 0 14px 32px rgba(0,0,0,0.45)`
+          : `0 8px 22px rgba(0,0,0,0.32), inset 0 1px 0 color-mix(in srgb, ${spec.accent} 18%, transparent)`,
       }}
     >
       <span className="arch-node-rail" style={{ background: spec.accent }} />
@@ -43,7 +43,7 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
           type="target"
           position={Position.Left}
           className="arch-handle"
-          style={{ background: spec.accent }}
+          style={{ background: spec.accent, boxShadow: `0 0 0 3px color-mix(in srgb, ${spec.accent} 28%, #0b0d10)` }}
         />
       ) : null}
       {!hideSource ? (
@@ -51,19 +51,23 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
           type="source"
           position={Position.Right}
           className="arch-handle"
-          style={{ background: spec.accent }}
+          style={{ background: spec.accent, boxShadow: `0 0 0 3px color-mix(in srgb, ${spec.accent} 28%, #0b0d10)` }}
         />
       ) : null}
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-[0.14em]" style={{ color: spec.accent }}>
-              {spec.label}
-            </span>
-            {data.locked ? <span className="text-[10px] text-[var(--muted)]">locked</span> : null}
-          </div>
-          <div className="mt-0.5 truncate text-[13px] font-medium text-[var(--text)]">{data.label}</div>
+          <span
+            className="arch-kind-badge"
+            style={{
+              color: "#0c1014",
+              background: spec.accent,
+            }}
+          >
+            {spec.label}
+          </span>
+          {data.locked ? <span className="ml-1.5 text-[10px] text-[var(--muted)]">locked</span> : null}
+          <div className="mt-1.5 truncate text-[13px] font-medium text-[var(--text)]">{data.label}</div>
         </div>
         <div className="font-mono text-[10px] text-[var(--muted)]">{id}</div>
       </div>
@@ -77,12 +81,13 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
         ) : null}
       </div>
 
-      <div className="arch-util">
+      <div className="arch-util" style={{ background: `color-mix(in srgb, ${spec.accent} 22%, #2a303a)` }}>
         <div
           className="arch-util-fill"
           style={{
             width: `${bar}%`,
-            background: sim ? utilTone(util, overflow) : "transparent",
+            background: sim ? utilTone(util, overflow) : spec.accent,
+            opacity: sim ? 1 : 0.45,
           }}
         />
       </div>
