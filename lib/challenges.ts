@@ -1,5 +1,6 @@
 import { CATALOG } from "./catalog";
 import { defaultProtocol, type ArchEdge, type ArchNode } from "./graph";
+import { GAP_X, NODE_W, ORIGIN_X, ORIGIN_Y } from "./layout";
 import type { BlockData, BlockKind, Challenge, EdgeData } from "./types";
 
 function block(
@@ -49,8 +50,8 @@ export interface PlayableChallenge extends Challenge {
   starter: ChallengeGraph;
 }
 
-const COL = 280;
-const ROW = 170;
+const COL = NODE_W + GAP_X;
+const ROW = ORIGIN_Y + 48;
 
 export const CHALLENGES: PlayableChallenge[] = [
   {
@@ -73,9 +74,9 @@ export const CHALLENGES: PlayableChallenge[] = [
     slo: { maxP99Ms: 200, maxErrorRate: 0.01 },
     starter: {
       nodes: [
-        block("client-1", "client", 40, ROW, "Web clients"),
-        block("api-1", "api", 40 + COL, ROW, "Shortener API"),
-        block("database-1", "database", 40 + COL * 2, ROW, "Links DB"),
+        block("client-1", "client", ORIGIN_X, ROW, "Web clients"),
+        block("api-1", "api", ORIGIN_X + COL, ROW, "Shortener API"),
+        block("database-1", "database", ORIGIN_X + COL * 2, ROW, "Links DB"),
       ],
       edges: [
         link("client-1", "api-1", "api"),
@@ -103,10 +104,10 @@ export const CHALLENGES: PlayableChallenge[] = [
     slo: { maxP99Ms: 250, maxErrorRate: 0.02 },
     starter: {
       nodes: [
-        block("client-1", "client", 40, ROW, "Mobile + web"),
-        block("load-balancer-1", "load_balancer", 40 + COL, ROW, "Edge LB"),
-        block("api-1", "api", 40 + COL * 2, ROW, "Timeline API"),
-        block("database-1", "database", 40 + COL * 3, ROW, "Posts DB"),
+        block("client-1", "client", ORIGIN_X, ROW, "Mobile + web"),
+        block("load-balancer-1", "load_balancer", ORIGIN_X + COL, ROW, "Edge LB"),
+        block("api-1", "api", ORIGIN_X + COL * 2, ROW, "Timeline API"),
+        block("database-1", "database", ORIGIN_X + COL * 3, ROW, "Posts DB"),
       ],
       edges: [
         link("client-1", "load-balancer-1", "load_balancer"),
@@ -136,9 +137,9 @@ export const CHALLENGES: PlayableChallenge[] = [
     slo: { maxP99Ms: 180, maxErrorRate: 0.01, maxQueueLagMs: 400 },
     starter: {
       nodes: [
-        block("client-1", "client", 40, ROW - 40, "Chat clients"),
-        block("api-1", "api", 40 + COL, ROW - 40, "Chat service"),
-        block("database-1", "database", 40 + COL * 2, ROW - 40, "Messages DB"),
+        block("client-1", "client", ORIGIN_X, ROW, "Chat clients"),
+        block("api-1", "api", ORIGIN_X + COL, ROW, "Chat service"),
+        block("database-1", "database", ORIGIN_X + COL * 2, ROW, "Messages DB"),
       ],
       edges: [
         link("client-1", "api-1", "api"),
@@ -166,9 +167,9 @@ export const CHALLENGES: PlayableChallenge[] = [
     slo: { maxP99Ms: 300, maxErrorRate: 0.02 },
     starter: {
       nodes: [
-        block("client-1", "client", 40, ROW, "Players"),
-        block("api-1", "api", 40 + COL, ROW, "Playback API"),
-        block("object-store-1", "object_store", 40 + COL * 2, ROW, "Video origin"),
+        block("client-1", "client", ORIGIN_X, ROW, "Players"),
+        block("api-1", "api", ORIGIN_X + COL, ROW, "Playback API"),
+        block("object-store-1", "object_store", ORIGIN_X + COL * 2, ROW, "Video origin"),
       ],
       edges: [
         link("client-1", "api-1", "api"),

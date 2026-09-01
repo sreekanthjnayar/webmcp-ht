@@ -12,6 +12,7 @@ export function SimulatorApp() {
   const challengeId = useArchitectureStore((s) => s.challengeId);
   const setChallenge = useArchitectureStore((s) => s.setChallenge);
   const runSimulation = useArchitectureStore((s) => s.runSimulation);
+  const arrangeLayers = useArchitectureStore((s) => s.arrangeLayers);
   const sim = useArchitectureStore((s) => s.sim);
   const challenge = useArchitectureStore((s) => s.challenge());
 
@@ -69,6 +70,9 @@ export function SimulatorApp() {
           )}
           <button type="button" className="arch-btn" onClick={() => setChallenge(challengeId)}>
             Reset sketch
+          </button>
+          <button type="button" className="arch-btn" onClick={() => arrangeLayers("human")}>
+            Arrange layers
           </button>
           <button type="button" className="arch-btn-primary" onClick={() => runSimulation(undefined, "human")}>
             Run {challenge.ingressRps.toLocaleString()} RPS

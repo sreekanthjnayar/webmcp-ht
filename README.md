@@ -17,6 +17,8 @@ The simulation is a toy on purpose: capacity vs incoming RPS, cache hits absorbe
 
 Each run scores **robustness** (0–100): SLO, errors, latency, headroom, and single points of failure. Run again after a change and the inspector shows whether the design got better or worse.
 
+Blocks are color-coded by kind so edge, app, data, and async layers stay readable. New blocks never land on top of existing ones; **Arrange layers** (and agent edits) pack the graph into hop columns so the request path reads left to right.
+
 ## Blocks
 
 Twenty-two blocks, grouped in the palette: **Edge** (client, DNS, WAF, CDN, load balancer, API gateway, rate limiter), **App** (auth, WebSocket gateway, API, search, ranker, transcoder), **Data** (cache, database, read replica, object store), **Async** (queue, pub/sub, worker, stream processor, notification).

@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { CATALOG } from "./catalog";
 import { CHALLENGES, challengeById, type PlayableChallenge } from "./challenges";
 import { connectError, defaultProtocol, newBlockId, type ArchEdge, type ArchNode } from "./graph";
+import { findFreePosition, layoutLayers } from "./layout";
 import { compareRuns } from "./robustness";
 import { simulate } from "./simulate";
 import type { BlockKind, Finding, Protocol, SimResult } from "./types";
@@ -36,14 +37,26 @@ interface ArchitectureState {
   activity: ActivityItem[];
   confirm: ConfirmRequest | null;
   past: Snapshot[];
+  layoutNonce: number;
   challenge: () => PlayableChallenge;
   setChallenge: (id: string) => void;
   onNodesChange: (changes: NodeChange<ArchNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<ArchEdge>[]) => void;
   onConnect: (connection: Connection) => string | null;
-  addNode: (kind: BlockKind, position: { x: number; y: number }, opts?: { id?: string; label?: string; actor?: "human" | "agent" }) => string;
+  addNode: (
+    kind: BlockKind,
+    position: { x: number; y: number },
+    opts?: { id?: string; label?: string; actor?: "human" | "agent"; skipArrange?: boolean },
+  ) => string;
   removeNode: (id: string, actor?: "human" | "agent") => string | null;
-  connectBlocks: (from: string, to: string, protocol?: Protocol, actor?: "human" | "agent") => string | null;
+  connectBlocks: (
+    from: string,
+    to: string,
+    protocol?: Protocol,
+    actor?: "human" | "agent",
+    opts?: { skipArrange?: boolean },
+  ) => string | null;
+  arrangeLayers: (actor?: "human" | "agent", opts?: { recordUndo?: boolean }) => void;
   disconnectBlocks: (from: string, to: string, actor?: "human" | "agent") => string | null;
   setNodeProps: (
     id: string,
@@ -96,6 +109,7 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
   activity: [],
   confirm: null,
   past: [],
+  layoutNonce: 0,
   challenge: () => challengeById(get().challengeId),
   setChallenge: (id) => {
     set({ ...loadChallenge(id), past: [], activity: [] });
@@ -122,10 +136,11 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
     pushUndo(set, get);
     const spec = CATALOG[kind];
     const id = opts?.id && !nodes.some((n) => n.id === opts.id) ? opts.id : newBlockId(kind, nodes.map((n) => n.id));
+    const actor = opts?.actor ?? "human";
     const node: ArchNode = {
       id,
       type: "block",
-      position,
+      position: findFreePosition(nodes, position),
       data: {
         kind,
         label: opts?.label ?? spec.label,
@@ -137,7 +152,10 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
       },
     };
     set({ nodes: [...nodes, node], sim: null });
-    get().log(opts?.actor ?? "human", `Added ${spec.label} (${id})`);
+    if (actor === "agent" && !opts?.skipArrange) {
+      get().arrangeLayers("agent", { recordUndo: false });
+    }
+    get().log(actor, `Added ${spec.label} (${id})`);
     return id;
   },
   removeNode: (id, actor = "agent") => {
@@ -154,7 +172,7 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
     get().log(actor, `Removed ${node.data.label} (${id})`);
     return null;
   },
-  connectBlocks: (from, to, protocol, actor = "agent") => {
+  connectBlocks: (from, to, protocol, actor = "agent", opts) => {
     const { nodes, edges } = get();
     const err = connectError(nodes, edges, from, to);
     if (err) return err;
@@ -169,8 +187,23 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
       data: { protocol: protocol ?? defaultProtocol(target.data.kind) },
     };
     set({ edges: [...edges, edge], sim: null });
+    if (actor === "agent" && !opts?.skipArrange) {
+      get().arrangeLayers("agent", { recordUndo: false });
+    }
     get().log(actor, `Connected ${from} → ${to}`);
     return null;
+  },
+  arrangeLayers: (actor = "human", opts) => {
+    const { nodes, edges } = get();
+    if (nodes.length === 0) return;
+    if (opts?.recordUndo !== false) pushUndo(set, get);
+    set({
+      nodes: layoutLayers(nodes, edges),
+      layoutNonce: get().layoutNonce + 1,
+    });
+    if (opts?.recordUndo !== false) {
+      get().log(actor, "Arranged blocks into request-path layers");
+    }
   },
   disconnectBlocks: (from, to, actor = "agent") => {
     const { edges } = get();

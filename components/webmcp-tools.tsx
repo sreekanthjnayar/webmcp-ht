@@ -3,6 +3,7 @@
 import { useWebMCP } from "usewebmcp";
 import { CATALOG } from "@/lib/catalog";
 import { CHALLENGES } from "@/lib/challenges";
+import { beside, defaultAddPosition } from "@/lib/layout";
 import { useArchitectureStore } from "@/lib/store";
 import { BLOCK_KINDS, type BlockKind, type FindingSeverity, type Protocol } from "@/lib/types";
 import { formatArchitecture, formatCatalog } from "@/lib/webmcp-format";
@@ -117,9 +118,7 @@ export function WebMcpTools() {
     execute: async ({ kind, id, label, nearId, replicas }) => {
       const s = getStore();
       const near = nearId ? s.nodes.find((n) => n.id === nearId) : null;
-      const position = near
-        ? { x: near.position.x + 240, y: near.position.y }
-        : { x: 80 + s.nodes.length * 24, y: 72 + (s.nodes.length % 4) * 28 };
+      const position = near ? beside(near.position) : defaultAddPosition(s.nodes);
       const newId = s.addNode(kind as BlockKind, position, { id, label, actor: "agent" });
       if (replicas) s.setNodeProps(newId, { replicas }, "agent");
       return json({ id: newId });
@@ -274,17 +273,18 @@ export function WebMcpTools() {
             break;
           }
           const near = typeof op.nearId === "string" ? s.nodes.find((n) => n.id === op.nearId) : null;
-          const position = near
-            ? { x: near.position.x + 240, y: near.position.y }
-            : { x: 80 + s.nodes.length * 24, y: 90 };
+          const position = near ? beside(near.position) : defaultAddPosition(s.nodes);
           const id = s.addNode(kind, position, {
             id: typeof op.id === "string" ? op.id : undefined,
             label: typeof op.label === "string" ? op.label : undefined,
             actor: "agent",
+            skipArrange: true,
           });
           results.push({ op, id });
         } else if (type === "connect") {
-          const err = s.connectBlocks(String(op.from), String(op.to), op.protocol as Protocol | undefined, "agent");
+          const err = s.connectBlocks(String(op.from), String(op.to), op.protocol as Protocol | undefined, "agent", {
+            skipArrange: true,
+          });
           results.push({ op, error: err });
           if (err) break;
         } else if (type === "disconnect") {
@@ -308,6 +308,7 @@ export function WebMcpTools() {
           break;
         }
       }
+      getStore().arrangeLayers("agent", { recordUndo: false });
       return json({ ok: true, results });
     },
   });

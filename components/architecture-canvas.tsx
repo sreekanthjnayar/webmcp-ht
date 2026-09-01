@@ -10,11 +10,11 @@ import {
   type NodeTypes,
   type EdgeTypes,
 } from "@xyflow/react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { BlockNode } from "@/components/block-node";
 import { PacketEdge } from "@/components/packet-edge";
+import { CATALOG, PALETTE_ORDER } from "@/lib/catalog";
 import type { ArchEdge, ArchNode } from "@/lib/graph";
-import { PALETTE_ORDER } from "@/lib/catalog";
 import type { BlockKind } from "@/lib/types";
 import { useArchitectureStore } from "@/lib/store";
 
@@ -29,8 +29,27 @@ function CanvasInner() {
   const onConnect = useArchitectureStore((s) => s.onConnect);
   const selectNode = useArchitectureStore((s) => s.selectNode);
   const addNode = useArchitectureStore((s) => s.addNode);
+  const selectedNodeId = useArchitectureStore((s) => s.selectedNodeId);
   const challengeId = useArchitectureStore((s) => s.challengeId);
-  const { screenToFlowPosition } = useReactFlow();
+  const layoutNonce = useArchitectureStore((s) => s.layoutNonce);
+  const { screenToFlowPosition, fitView } = useReactFlow();
+
+  const placedNodes = useMemo(
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        zIndex: n.id === selectedNodeId ? 1000 : 1,
+      })),
+    [nodes, selectedNodeId],
+  );
+
+  useEffect(() => {
+    if (layoutNonce <= 0) return;
+    const frame = requestAnimationFrame(() => {
+      fitView({ padding: 0.28, duration: 280 });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [layoutNonce, fitView]);
 
   const placeKind = useCallback(
     (event: React.DragEvent | React.MouseEvent, kind: BlockKind, clientX?: number, clientY?: number) => {
@@ -61,7 +80,7 @@ function CanvasInner() {
   return (
     <ReactFlow<ArchNode, ArchEdge>
       key={challengeId}
-      nodes={nodes}
+      nodes={placedNodes}
       edges={edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
@@ -75,10 +94,14 @@ function CanvasInner() {
       onDragOver={onDragOver}
       onDrop={onDrop}
       fitView
-      fitViewOptions={{ padding: 0.24 }}
+      fitViewOptions={{ padding: 0.28 }}
+      snapToGrid
+      snapGrid={[16, 16]}
+      elevateNodesOnSelect
       proOptions={{ hideAttribution: true }}
       deleteKeyCode={["Backspace", "Delete"]}
       className="arch-flow"
+      defaultEdgeOptions={{ type: "packet" }}
     >
       <Background gap={22} size={1} color="var(--grid)" />
       <Controls showInteractive={false} />
@@ -87,10 +110,8 @@ function CanvasInner() {
         zoomable
         maskColor="rgba(8,10,12,0.72)"
         nodeColor={(n) => {
-          const kind = (n.data as { kind?: string })?.kind;
-          if (kind === "cache" || kind === "cdn") return "#d4a056";
-          if (kind === "database") return "#c98980";
-          return "#3a414d";
+          const kind = (n.data as { kind?: BlockKind })?.kind;
+          return kind && CATALOG[kind] ? CATALOG[kind].accent : "#3a414d";
         }}
       />
     </ReactFlow>

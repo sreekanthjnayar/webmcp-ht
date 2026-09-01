@@ -25,7 +25,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 0,
     maxIn: 0,
     maxOut: null,
-    accent: "#c4b5a0",
+    accent: "#e8c48a",
   },
   dns: {
     kind: "dns",
@@ -37,7 +37,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 1,
     maxIn: null,
     maxOut: null,
-    accent: "#b8b3a4",
+    accent: "#5eead4",
   },
   waf: {
     kind: "waf",
@@ -49,7 +49,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 3,
     maxIn: null,
     maxOut: null,
-    accent: "#c4a090",
+    accent: "#fb923c",
   },
   cdn: {
     kind: "cdn",
@@ -62,7 +62,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     hitRate: 0.8,
     maxIn: null,
     maxOut: null,
-    accent: "#7eb8a8",
+    accent: "#22d3ee",
   },
   load_balancer: {
     kind: "load_balancer",
@@ -74,7 +74,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 2,
     maxIn: null,
     maxOut: null,
-    accent: "#9aa4b2",
+    accent: "#38bdf8",
   },
   api_gateway: {
     kind: "api_gateway",
@@ -86,7 +86,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 4,
     maxIn: null,
     maxOut: null,
-    accent: "#8a9bb0",
+    accent: "#818cf8",
   },
   rate_limiter: {
     kind: "rate_limiter",
@@ -98,7 +98,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 2,
     maxIn: null,
     maxOut: null,
-    accent: "#c4a46a",
+    accent: "#fbbf24",
   },
   auth: {
     kind: "auth",
@@ -110,7 +110,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 8,
     maxIn: null,
     maxOut: null,
-    accent: "#a090b0",
+    accent: "#c084fc",
   },
   websocket_gateway: {
     kind: "websocket_gateway",
@@ -122,7 +122,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 5,
     maxIn: null,
     maxOut: null,
-    accent: "#7aa0b8",
+    accent: "#2dd4bf",
   },
   api: {
     kind: "api",
@@ -134,7 +134,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 15,
     maxIn: null,
     maxOut: null,
-    accent: "#8fa4c4",
+    accent: "#60a5fa",
   },
   search: {
     kind: "search",
@@ -146,7 +146,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 35,
     maxIn: null,
     maxOut: 0,
-    accent: "#8aaca0",
+    accent: "#34d399",
   },
   ranker: {
     kind: "ranker",
@@ -158,7 +158,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 22,
     maxIn: null,
     maxOut: null,
-    accent: "#9a8a78",
+    accent: "#fb7185",
   },
   transcoder: {
     kind: "transcoder",
@@ -170,7 +170,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 80,
     maxIn: null,
     maxOut: null,
-    accent: "#7a9a88",
+    accent: "#a3e635",
   },
   cache: {
     kind: "cache",
@@ -183,7 +183,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     hitRate: 0.9,
     maxIn: null,
     maxOut: null,
-    accent: "#d4a056",
+    accent: "#f59e0b",
   },
   database: {
     kind: "database",
@@ -195,7 +195,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 24,
     maxIn: null,
     maxOut: 0,
-    accent: "#c98980",
+    accent: "#f43f5e",
   },
   read_replica: {
     kind: "read_replica",
@@ -207,7 +207,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 18,
     maxIn: null,
     maxOut: 0,
-    accent: "#c9a090",
+    accent: "#e11d48",
   },
   object_store: {
     kind: "object_store",
@@ -219,7 +219,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 70,
     maxIn: null,
     maxOut: 0,
-    accent: "#7f9ac9",
+    accent: "#6366f1",
   },
   queue: {
     kind: "queue",
@@ -231,7 +231,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 1,
     maxIn: null,
     maxOut: null,
-    accent: "#b39bc9",
+    accent: "#a78bfa",
   },
   pubsub: {
     kind: "pubsub",
@@ -243,7 +243,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 2,
     maxIn: null,
     maxOut: null,
-    accent: "#a08ab8",
+    accent: "#e879f9",
   },
   worker: {
     kind: "worker",
@@ -255,7 +255,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 28,
     maxIn: null,
     maxOut: null,
-    accent: "#9aaa6e",
+    accent: "#84cc16",
   },
   stream_processor: {
     kind: "stream_processor",
@@ -267,7 +267,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 20,
     maxIn: null,
     maxOut: null,
-    accent: "#8aaa7a",
+    accent: "#14b8a6",
   },
   notification: {
     kind: "notification",
@@ -279,7 +279,7 @@ export const CATALOG: Record<BlockKind, KindSpec> = {
     baseLatencyMs: 40,
     maxIn: null,
     maxOut: 0,
-    accent: "#b89a7a",
+    accent: "#f472b6",
   },
 };
 

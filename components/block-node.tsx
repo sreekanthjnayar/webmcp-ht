@@ -23,20 +23,42 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
     data.kind === "client" || data.rpsCapacity <= 0
       ? "∞"
       : `${(data.replicas * data.rpsCapacity).toLocaleString()} rps`;
+  const fill = `color-mix(in srgb, ${spec.accent} ${selected ? 22 : 14}%, #12161c)`;
+  const border = `color-mix(in srgb, ${spec.accent} ${selected ? 78 : 46}%, #2a303a)`;
 
   return (
     <div
       className={`arch-node ${selected ? "arch-node-selected" : ""}`}
-      style={{ borderColor: selected ? spec.accent : undefined }}
+      style={{
+        borderColor: border,
+        background: fill,
+        boxShadow: selected
+          ? `0 0 0 1px color-mix(in srgb, ${spec.accent} 55%, transparent), 0 12px 28px rgba(0,0,0,0.4)`
+          : "0 8px 20px rgba(0,0,0,0.28)",
+      }}
     >
-      {!hideTarget ? <Handle type="target" position={Position.Left} className="arch-handle" /> : null}
-      {!hideSource ? <Handle type="source" position={Position.Right} className="arch-handle" /> : null}
+      <span className="arch-node-rail" style={{ background: spec.accent }} />
+      {!hideTarget ? (
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="arch-handle"
+          style={{ background: spec.accent }}
+        />
+      ) : null}
+      {!hideSource ? (
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="arch-handle"
+          style={{ background: spec.accent }}
+        />
+      ) : null}
 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="arch-kind-dot" style={{ background: spec.accent }} />
-            <span className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+            <span className="text-[10px] uppercase tracking-[0.14em]" style={{ color: spec.accent }}>
               {spec.label}
             </span>
             {data.locked ? <span className="text-[10px] text-[var(--muted)]">locked</span> : null}
