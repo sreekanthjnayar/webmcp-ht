@@ -1,18 +1,7 @@
 import { capacityOf, isBufferKind, isCacheKind, isFanoutKind, specOf } from "./catalog";
 import { sanitizeGraph, topologicalOrder, type ArchEdge, type ArchNode } from "./graph";
-import { emptyRobustness, scoreRobustness } from "./robustness";
-import { evaluateSlo } from "./slo";
+import { drainCapacity, EMPTY_NODE, finish, hottestSyncPath, latencyMs } from "./simulate-paths";
 import type { SimEdgeResult, SimNodeResult, SimResult, Slo } from "./types";
-
-const EMPTY_NODE: SimNodeResult = {
-  incomingRps: 0,
-  processedRps: 0,
-  overflowRps: 0,
-  forwardedRps: 0,
-  utilization: 0,
-  addedLatencyMs: 0,
-  queueLagMs: 0,
-};
 
 export { evaluateSlo } from "./slo";
 
@@ -117,7 +106,6 @@ function simulateInner(
 
     const outs = outgoing.get(id) ?? [];
     if (outs.length === 0 && forwarded > 0 && isCache) {
-      // Misses with no origin are dropped.
       nodeResult[id] = {
         incomingRps: inc,
         processedRps: hits,
@@ -168,17 +156,21 @@ function simulateInner(
     .filter((n) => (nodeResult[n.id]?.utilization ?? 0) >= 1 || (nodeResult[n.id]?.overflowRps ?? 0) > 1)
     .map((n) => n.id);
 
-  const base = {
-    ingressRps,
-    p99Ms,
-    errorRate,
-    maxQueueLagMs,
-    hottestPath,
-    bottlenecks,
-    nodes: nodeResult,
-    edges: edgeResult,
-  };
-  const result = finish(nodes, edges, base, slo);
+  const result = finish(
+    nodes,
+    edges,
+    {
+      ingressRps,
+      p99Ms,
+      errorRate,
+      maxQueueLagMs,
+      hottestPath,
+      bottlenecks,
+      nodes: nodeResult,
+      edges: edgeResult,
+    },
+    slo,
+  );
   if (broken.length) {
     result.robustness = {
       ...result.robustness,
@@ -189,68 +181,4 @@ function simulateInner(
     };
   }
   return result;
-}
-
-function finish(
-  nodes: ArchNode[],
-  edges: ArchEdge[],
-  base: Omit<SimResult, "sloPassed" | "robustness" | "delta">,
-  slo: Slo,
-): SimResult {
-  const sloPassed = evaluateSlo(base, slo);
-  const robustness = base.error
-    ? emptyRobustness("The graph cannot run.", [base.error])
-    : scoreRobustness(nodes, edges, base, slo);
-  return { ...base, sloPassed, robustness, delta: null };
-}
-
-function latencyMs(base: number, util: number): number {
-  return base * (1 + 1.5 * Math.max(0, util - 0.7));
-}
-
-function drainCapacity(
-  queueId: string,
-  outgoing: Map<string, ArchEdge[]>,
-  nodeById: Map<string, ArchNode>,
-): number {
-  const outs = outgoing.get(queueId) ?? [];
-  if (outs.length === 0) return 0;
-  let cap = 0;
-  for (const e of outs) {
-    const n = nodeById.get(e.target);
-    if (!n) continue;
-    cap += capacityOf(n.data.kind, n.data.replicas, n.data.rpsCapacity);
-  }
-  return cap;
-}
-
-function hottestSyncPath(
-  clients: ArchNode[],
-  outgoing: Map<string, ArchEdge[]>,
-  nodeById: Map<string, ArchNode>,
-  nodeResult: Record<string, SimNodeResult>,
-): string[] {
-  let best: string[] = [];
-  let bestCost = -1;
-
-  function walk(id: string, path: string[], cost: number) {
-    const next = (outgoing.get(id) ?? []).filter((e) => (e.data?.protocol ?? "sync") === "sync");
-    const here = [...path, id];
-    const r = nodeResult[id];
-    const nextCost = cost + (r?.addedLatencyMs ?? 0) + (r?.queueLagMs ?? 0);
-    if (next.length === 0) {
-      if (nextCost > bestCost) {
-        bestCost = nextCost;
-        best = here;
-      }
-      return;
-    }
-    for (const e of next) {
-      if (path.includes(e.target)) continue;
-      walk(e.target, here, nextCost);
-    }
-  }
-
-  for (const c of clients) walk(c.id, [], 0);
-  return best;
 }
