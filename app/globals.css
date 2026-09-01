@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+:root {
+  --bg: #0b0d10;
+  --panel: #11141a;
+  --panel-2: #181c24;
+  --line: #2a303a;
+  --text: #e7e4dc;
+  --muted: #8b9288;
+  --accent: #d4a056;
+  --ok: #6dbf8a;
+  --warn: #d4a056;
+  --fail: #e07070;
+  --edge: #4a5563;
+  --grid: #1c2129;
+  --background: var(--bg);
+  --foreground: var(--text);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.arch-node {
+  width: 196px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  padding: 10px 12px 8px;
+  border-radius: 6px;
+}
+
+.arch-node-selected {
+  background: #1c222c;
+}
+
+.arch-kind-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+}
+
+.arch-util {
+  margin-top: 8px;
+  height: 3px;
+  background: #2a303a;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.arch-util-fill {
+  height: 100%;
+}
+
+.arch-handle {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border: 0;
+}
+
+.arch-input {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.arch-btn,
+.arch-btn-primary {
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.arch-btn {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+
+.arch-btn-primary {
+  background: var(--accent);
+  color: #1a140c;
+  font-weight: 550;
+}
+
+.arch-chip {
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--muted);
+}
+
+.arch-chip-ok {
+  border-color: #2f5a40;
+  color: var(--ok);
+}
+
+.arch-chip-fail {
+  border-color: #6a3030;
+  color: var(--fail);
+}
+
+.arch-flow {
+  background: var(--bg);
+}
+
+.react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.react-flow__controls-button {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  fill: var(--text);
+}
+
+.react-flow__minimap {
+  background: var(--panel) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+.react-flow__attribution {
+  display: none;
+}
