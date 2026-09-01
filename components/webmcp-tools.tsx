@@ -4,20 +4,8 @@ import { useWebMCP } from "usewebmcp";
 import { CATALOG } from "@/lib/catalog";
 import { CHALLENGES } from "@/lib/challenges";
 import { useArchitectureStore } from "@/lib/store";
+import { BLOCK_KINDS, type BlockKind, type FindingSeverity, type Protocol } from "@/lib/types";
 import { formatArchitecture, formatCatalog } from "@/lib/webmcp-format";
-import type { BlockKind, FindingSeverity, Protocol } from "@/lib/types";
-
-const KIND_ENUM = [
-  "client",
-  "cdn",
-  "load_balancer",
-  "api",
-  "cache",
-  "queue",
-  "worker",
-  "database",
-  "object_store",
-] as const;
 
 function getStore() {
   return useArchitectureStore.getState();
@@ -47,8 +35,25 @@ export function WebMcpTools() {
   });
 
   useWebMCP({
+    name: "get_robustness",
+    description:
+      "Score how robust the last simulation is (0-100) and, if a previous run exists, whether the latest change made the system better or worse.",
+    annotations: { readOnlyHint: true },
+    execute: async () => {
+      const s = getStore();
+      if (!s.sim) return json({ ran: false, message: "No simulation yet. Call run_simulation." });
+      return json({
+        robustness: s.sim.robustness,
+        delta: s.sim.delta,
+        history: s.simHistory,
+        sloPassed: s.sim.sloPassed,
+      });
+    },
+  });
+
+  useWebMCP({
     name: "get_simulation",
-    description: "Return the last simulation: utilization, p99, error rate, bottlenecks, SLO pass/fail.",
+    description: "Return the last simulation: utilization, p99, error rate, bottlenecks, SLO pass/fail, robustness, and delta vs the previous run.",
     annotations: { readOnlyHint: true },
     execute: async () => {
       const s = getStore();
@@ -100,7 +105,7 @@ export function WebMcpTools() {
     inputSchema: {
       type: "object",
       properties: {
-        kind: { type: "string", enum: KIND_ENUM },
+        kind: { type: "string", enum: BLOCK_KINDS },
         id: { type: "string", description: "Optional stable id, e.g. cache-1" },
         label: { type: "string" },
         nearId: { type: "string", description: "Place to the right of this node" },

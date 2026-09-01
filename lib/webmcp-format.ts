@@ -1,4 +1,4 @@
-import { CATALOG, PALETTE_ORDER } from "./catalog";
+import { CATALOG, PALETTE_GROUPS, PALETTE_ORDER } from "./catalog";
 import { callTrees, type ArchEdge, type ArchNode } from "./graph";
 import type { Challenge, SimResult } from "./types";
 
@@ -43,22 +43,26 @@ export function formatArchitecture(
 }
 
 export function formatCatalog() {
-  return PALETTE_ORDER.map((kind) => {
-    const spec = CATALOG[kind];
-    return {
-      kind: spec.kind,
-      label: spec.label,
-      blurb: spec.blurb,
-      defaults: {
-        replicas: spec.replicas,
-        rpsCapacity: spec.rpsCapacity,
-        baseLatencyMs: spec.baseLatencyMs,
-        hitRate: spec.hitRate ?? null,
-      },
-      rules: {
-        maxInbound: spec.maxIn,
-        maxOutbound: spec.maxOut,
-      },
-    };
-  });
+  return {
+    groups: PALETTE_GROUPS.map((g) => g.title),
+    blocks: PALETTE_ORDER.map((kind) => {
+      const spec = CATALOG[kind];
+      return {
+        kind: spec.kind,
+        label: spec.label,
+        group: PALETTE_GROUPS.find((g) => g.kinds.includes(kind))?.title ?? "Other",
+        blurb: spec.blurb,
+        defaults: {
+          replicas: spec.replicas,
+          rpsCapacity: spec.rpsCapacity,
+          baseLatencyMs: spec.baseLatencyMs,
+          hitRate: spec.hitRate ?? null,
+        },
+        rules: {
+          maxInbound: spec.maxIn,
+          maxOutbound: spec.maxOut,
+        },
+      };
+    }),
+  };
 }

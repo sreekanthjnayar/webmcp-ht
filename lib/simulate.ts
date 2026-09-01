@@ -1,5 +1,7 @@
-import { CATALOG, capacityOf } from "./catalog";
+import { CATALOG, capacityOf, isBufferKind, isCacheKind, isFanoutKind } from "./catalog";
 import { topologicalOrder, type ArchEdge, type ArchNode } from "./graph";
+import { emptyRobustness, scoreRobustness } from "./robustness";
+import { evaluateSlo } from "./slo";
 import type { SimEdgeResult, SimNodeResult, SimResult, Slo } from "./types";
 
 const EMPTY_NODE: SimNodeResult = {
@@ -12,13 +14,7 @@ const EMPTY_NODE: SimNodeResult = {
   queueLagMs: 0,
 };
 
-export function evaluateSlo(sim: Omit<SimResult, "sloPassed">, slo: Slo): boolean {
-  if (sim.error) return false;
-  if (sim.p99Ms > slo.maxP99Ms) return false;
-  if (sim.errorRate > slo.maxErrorRate) return false;
-  if (slo.maxQueueLagMs != null && sim.maxQueueLagMs > slo.maxQueueLagMs) return false;
-  return true;
-}
+export { evaluateSlo } from "./slo";
 
 export function simulate(
   nodes: ArchNode[],
@@ -40,7 +36,7 @@ export function simulate(
       edges: {} as Record<string, SimEdgeResult>,
       error: "Cycle detected. Disconnect a back-edge, then run again.",
     };
-    return { ...failed, sloPassed: false };
+    return finish(nodes, edges, failed, slo);
   }
 
   const clients = nodes.filter((n) => n.data.kind === "client");
@@ -56,7 +52,7 @@ export function simulate(
       edges: Object.fromEntries(edges.map((e) => [e.id, { rps: 0 }])),
       error: "Add a Client so traffic has somewhere to start.",
     };
-    return { ...failed, sloPassed: false };
+    return finish(nodes, edges, failed, slo);
   }
 
   const incoming = new Map<string, number>();
@@ -81,7 +77,7 @@ export function simulate(
     const overflow = cap === Number.POSITIVE_INFINITY ? 0 : Math.max(0, inc - cap);
     const available = inc - overflow;
 
-    const isCache = node.data.kind === "cdn" || node.data.kind === "cache";
+    const isCache = isCacheKind(node.data.kind);
     const hitRate = isCache ? (node.data.hitRate ?? spec.hitRate ?? 0) : 0;
     const hits = isCache ? available * hitRate : 0;
     const forwarded = isCache ? available * (1 - hitRate) : available;
@@ -104,8 +100,9 @@ export function simulate(
 
     const share = outs.length ? forwarded / outs.length : 0;
     for (const e of outs) {
-      edgeResult[e.id] = { rps: share };
-      incoming.set(e.target, (incoming.get(e.target) ?? 0) + share);
+      const rps = isFanoutKind(node.data.kind) ? forwarded : share;
+      edgeResult[e.id] = { rps };
+      incoming.set(e.target, (incoming.get(e.target) ?? 0) + rps);
     }
 
     nodeResult[id] = {
@@ -120,7 +117,7 @@ export function simulate(
   }
 
   for (const node of nodes) {
-    if (node.data.kind !== "queue") continue;
+    if (!isBufferKind(node.data.kind)) continue;
     const inc = nodeResult[node.id]?.incomingRps ?? 0;
     const drain = drainCapacity(node.id, outgoing, nodeById);
     const lag = drain <= 0 ? (inc > 0 ? 10_000 : 0) : Math.max(0, inc - drain) / drain * 1000;
@@ -149,7 +146,20 @@ export function simulate(
     nodes: nodeResult,
     edges: edgeResult,
   };
-  return { ...base, sloPassed: evaluateSlo(base, slo) };
+  return finish(nodes, edges, base, slo);
+}
+
+function finish(
+  nodes: ArchNode[],
+  edges: ArchEdge[],
+  base: Omit<SimResult, "sloPassed" | "robustness" | "delta">,
+  slo: Slo,
+): SimResult {
+  const sloPassed = evaluateSlo(base, slo);
+  const robustness = base.error
+    ? emptyRobustness("The graph cannot run.", [base.error])
+    : scoreRobustness(nodes, edges, base, slo);
+  return { ...base, sloPassed, robustness, delta: null };
 }
 
 function latencyMs(base: number, util: number): number {

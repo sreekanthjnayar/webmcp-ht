@@ -67,7 +67,7 @@ export const CHALLENGES: PlayableChallenge[] = [
     hints: [
       "Hot keys belong in a cache, in front of the database — not beside it.",
       "A CDN can take the most popular redirects at the edge.",
-      "Writes (new links) are rare; optimize the read path first.",
+      "A rate limiter in front of the API sheds abusive traffic before it hits storage.",
     ],
     ingressRps: 10_000,
     slo: { maxP99Ms: 200, maxErrorRate: 0.01 },
@@ -95,9 +95,9 @@ export const CHALLENGES: PlayableChallenge[] = [
       "error rate ≤ 2%",
     ],
     hints: [
-      "Most reads should never reach the primary database.",
+      "Most reads should never reach the primary database — CDN, then cache, then maybe a read replica.",
       "Scale the CDN: one edge node will not absorb 80k RPS.",
-      "Fan-out-on-write into a cache is the usual pattern; this simulator treats that as a cache in front of the DB.",
+      "A ranker on every read will melt. Cache ranked timelines.",
     ],
     ingressRps: 80_000,
     slo: { maxP99Ms: 250, maxErrorRate: 0.02 },
@@ -128,9 +128,9 @@ export const CHALLENGES: PlayableChallenge[] = [
       "queue lag ≤ 400ms if you decouple with a queue",
     ],
     hints: [
-      "Ack the client before fan-out finishes. Incoming edges to a queue are async and drop off the p99 path.",
-      "Workers + database replicas must drain the queue or lag blows the SLO.",
-      "A cache is the right shape for presence and recent threads — not for durable history.",
+      "Put a WebSocket gateway in front so connections are not raw API replicas.",
+      "Ack via a queue or pub/sub; incoming edges to those blocks are async and drop off the p99 path.",
+      "Pub/sub fans out the full rate to every subscriber (notifications, other devices).",
     ],
     ingressRps: 5_000,
     slo: { maxP99Ms: 180, maxErrorRate: 0.01, maxQueueLagMs: 400 },
@@ -160,7 +160,7 @@ export const CHALLENGES: PlayableChallenge[] = [
     hints: [
       "Put a CDN in front. Origin object storage should barely see play-start traffic.",
       "Scale the CDN: 60k RPS is more than one edge node in this catalog.",
-      "A cache in front of metadata beats sending every start to a database.",
+      "Transcoders belong behind a queue, never on the play-start path.",
     ],
     ingressRps: 60_000,
     slo: { maxP99Ms: 300, maxErrorRate: 0.02 },

@@ -119,9 +119,9 @@ body {
   color: var(--ok);
 }
 
-.arch-chip-fail {
-  border-color: #6a3030;
-  color: var(--fail);
+.arch-chip-warn {
+  border-color: #5a4a28;
+  color: var(--warn);
 }
 
 .arch-flow {

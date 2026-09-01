@@ -1,13 +1,29 @@
-export type BlockKind =
-  | "client"
-  | "cdn"
-  | "load_balancer"
-  | "api"
-  | "cache"
-  | "queue"
-  | "worker"
-  | "database"
-  | "object_store";
+export const BLOCK_KINDS = [
+  "client",
+  "dns",
+  "waf",
+  "cdn",
+  "load_balancer",
+  "api_gateway",
+  "rate_limiter",
+  "auth",
+  "websocket_gateway",
+  "api",
+  "search",
+  "ranker",
+  "transcoder",
+  "cache",
+  "database",
+  "read_replica",
+  "object_store",
+  "queue",
+  "pubsub",
+  "worker",
+  "stream_processor",
+  "notification",
+] as const;
+
+export type BlockKind = (typeof BLOCK_KINDS)[number];
 
 export type Protocol = "sync" | "async";
 
@@ -58,6 +74,39 @@ export interface SimEdgeResult {
   rps: number;
 }
 
+export type RobustnessGrade = "fragile" | "weak" | "fair" | "solid" | "hardy";
+
+export interface RobustnessParts {
+  slo: number;
+  errors: number;
+  latency: number;
+  headroom: number;
+  redundancy: number;
+}
+
+export interface RobustnessReport {
+  score: number;
+  grade: RobustnessGrade;
+  headline: string;
+  notes: string[];
+  strengths: string[];
+  parts: RobustnessParts;
+}
+
+export interface MetricDelta {
+  label: string;
+  before: string;
+  after: string;
+  direction: "better" | "worse" | "unchanged";
+}
+
+export interface RunDelta {
+  scoreDelta: number;
+  direction: "better" | "worse" | "unchanged";
+  summary: string;
+  metrics: MetricDelta[];
+}
+
 export interface SimResult {
   ingressRps: number;
   p99Ms: number;
@@ -68,6 +117,8 @@ export interface SimResult {
   nodes: Record<string, SimNodeResult>;
   edges: Record<string, SimEdgeResult>;
   sloPassed: boolean;
+  robustness: RobustnessReport;
+  delta: RunDelta | null;
   error?: string;
 }
 

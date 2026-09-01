@@ -13,7 +13,13 @@ Each case loads a first-sketch architecture that **misses** its SLO. Rewire it, 
 | **Realtime chat** | 5k sends/s, p99 ack ≤ 180ms, queue lag ≤ 400ms | Database on the request path |
 | **Video streaming** | 60k play-starts/s, p99 ≤ 300ms, errors ≤ 2% | Origin object storage serves the world |
 
-The simulation is a toy on purpose: capacity vs incoming RPS, cache hits absorbed, overflow = errors, p99 = hottest **sync** path. Edges into a queue are async, so a chat ack can be fast while workers drain in the background — if they cannot keep up, queue lag fails the SLO.
+The simulation is a toy on purpose: capacity vs incoming RPS, cache hits absorbed, overflow = errors, p99 = hottest **sync** path. Edges into a queue or pub/sub are async. Pub/sub copies the full rate to every subscriber.
+
+Each run scores **robustness** (0–100): SLO, errors, latency, headroom, and single points of failure. Run again after a change and the inspector shows whether the design got better or worse.
+
+## Blocks
+
+Twenty-two blocks, grouped in the palette: **Edge** (client, DNS, WAF, CDN, load balancer, API gateway, rate limiter), **App** (auth, WebSocket gateway, API, search, ranker, transcoder), **Data** (cache, database, read replica, object store), **Async** (queue, pub/sub, worker, stream processor, notification).
 
 ## Human + agent
 

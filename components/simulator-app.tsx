@@ -43,11 +43,27 @@ export function SimulatorApp() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {sim ? (
-            <span className={`arch-chip ${sim.sloPassed ? "arch-chip-ok" : "arch-chip-fail"}`}>
-              {sim.sloPassed ? "SLO pass" : "SLO miss"}
-            </span>
+            <>
+              <span className={`arch-chip ${sim.sloPassed ? "arch-chip-ok" : "arch-chip-fail"}`}>
+                {sim.sloPassed ? "SLO pass" : "SLO miss"}
+              </span>
+              <span
+                className={`arch-chip ${
+                  sim.robustness.grade === "hardy" || sim.robustness.grade === "solid"
+                    ? "arch-chip-ok"
+                    : sim.robustness.grade === "fragile" || sim.robustness.grade === "weak"
+                      ? "arch-chip-fail"
+                      : "arch-chip-warn"
+                }`}
+              >
+                {sim.robustness.score} {sim.robustness.grade}
+                {sim.delta && sim.delta.direction !== "unchanged"
+                  ? ` ${sim.delta.scoreDelta > 0 ? "+" : ""}${sim.delta.scoreDelta}`
+                  : ""}
+              </span>
+            </>
           ) : (
             <span className="arch-chip">Not run</span>
           )}
@@ -59,7 +75,19 @@ export function SimulatorApp() {
           </button>
         </div>
       </header>
-
+      {sim?.delta ? (
+        <div
+          className={`shrink-0 border-b border-[var(--line)] px-4 py-1.5 text-[12px] ${
+            sim.delta.direction === "better"
+              ? "text-[var(--ok)]"
+              : sim.delta.direction === "worse"
+                ? "text-[var(--fail)]"
+                : "text-[var(--muted)]"
+          }`}
+        >
+          {sim.delta.summary}
+        </div>
+      ) : null}
       <div className="flex min-h-0 flex-1 max-md:flex-col">
         <Palette />
         <ArchitectureCanvas />

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { challengeById } from "./challenges";
-import { simulate } from "./simulate";
-import type { ArchEdge, ArchNode } from "./graph";
 import { CATALOG } from "./catalog";
+import { challengeById } from "./challenges";
+import type { ArchEdge, ArchNode } from "./graph";
+import { compareRuns } from "./robustness";
+import { simulate } from "./simulate";
 import type { BlockData, BlockKind } from "./types";
 
 function n(id: string, kind: BlockKind, replicas?: number, hitRate?: number): ArchNode {
@@ -138,5 +139,58 @@ describe("Video streaming challenge", () => {
     ];
     const sim = simulate(nodes, edges, c.ingressRps, c.slo);
     expect(sim.sloPassed).toBe(true);
+  });
+});
+
+describe("robustness feedback", () => {
+  it("scores a naive URL shortener as fragile and a cached design higher", () => {
+    const c = challengeById("url-shortener");
+    const naive = simulate(c.starter.nodes, c.starter.edges, c.ingressRps, c.slo);
+    const repaired = simulate(
+      [
+        n("client-1", "client"),
+        n("cdn-1", "cdn"),
+        n("api-1", "api", 2),
+        n("cache-1", "cache"),
+        n("database-1", "database"),
+      ],
+      [
+        e("client-1", "cdn-1"),
+        e("cdn-1", "api-1"),
+        e("api-1", "cache-1"),
+        e("cache-1", "database-1"),
+      ],
+      c.ingressRps,
+      c.slo,
+    );
+    expect(naive.robustness.score).toBeLessThan(40);
+    expect(naive.robustness.grade).toBe("fragile");
+    expect(repaired.robustness.score).toBeGreaterThan(naive.robustness.score);
+    expect(repaired.sloPassed).toBe(true);
+    const delta = compareRuns(naive, repaired);
+    expect(delta.direction).toBe("better");
+    expect(delta.scoreDelta).toBeGreaterThan(0);
+  });
+
+  it("fans pub/sub traffic to every subscriber instead of splitting", () => {
+    const c = challengeById("realtime-chat");
+    const nodes: ArchNode[] = [
+      n("client-1", "client"),
+      n("api-1", "api", 4),
+      n("pubsub-1", "pubsub"),
+      n("worker-1", "worker", 6),
+      n("notification-1", "notification", 2),
+    ];
+    const edges: ArchEdge[] = [
+      e("client-1", "api-1"),
+      e("api-1", "pubsub-1", "async"),
+      e("pubsub-1", "worker-1", "async"),
+      e("pubsub-1", "notification-1", "async"),
+    ];
+    const sim = simulate(nodes, edges, c.ingressRps, c.slo);
+    const toWorker = Object.entries(sim.edges).find(([id]) => id.includes("worker"))?.[1];
+    const toNote = Object.entries(sim.edges).find(([id]) => id.includes("notification"))?.[1];
+    expect(toWorker?.rps).toBeGreaterThan(1000);
+    expect(toNote?.rps).toBeCloseTo(toWorker?.rps ?? 0, 0);
   });
 });

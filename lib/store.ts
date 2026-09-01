@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { CATALOG } from "./catalog";
 import { CHALLENGES, challengeById, type PlayableChallenge } from "./challenges";
 import { connectError, defaultProtocol, newBlockId, type ArchEdge, type ArchNode } from "./graph";
+import { compareRuns } from "./robustness";
 import { simulate } from "./simulate";
 import type { BlockKind, Finding, Protocol, SimResult } from "./types";
 
@@ -30,6 +31,8 @@ interface ArchitectureState {
   edges: ArchEdge[];
   selectedNodeId: string | null;
   sim: SimResult | null;
+  previousSim: SimResult | null;
+  simHistory: number[];
   activity: ActivityItem[];
   confirm: ConfirmRequest | null;
   past: Snapshot[];
@@ -68,7 +71,10 @@ function cloneGraph(nodes: ArchNode[], edges: ArchEdge[]): Snapshot {
   };
 }
 
-function loadChallenge(id: string): Pick<ArchitectureState, "challengeId" | "nodes" | "edges" | "sim" | "selectedNodeId"> {
+function loadChallenge(id: string): Pick<
+  ArchitectureState,
+  "challengeId" | "nodes" | "edges" | "sim" | "previousSim" | "simHistory" | "selectedNodeId"
+> {
   const c = challengeById(id);
   const snap = cloneGraph(c.starter.nodes, c.starter.edges);
   return {
@@ -76,6 +82,8 @@ function loadChallenge(id: string): Pick<ArchitectureState, "challengeId" | "nod
     nodes: snap.nodes,
     edges: snap.edges,
     sim: null,
+    previousSim: null,
+    simHistory: [],
     selectedNodeId: null,
   };
 }
@@ -222,15 +230,23 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
   selectNode: (id) => set({ selectedNodeId: id }),
   runSimulation: (ingressRps, actor = "human") => {
     const c = get().challenge();
+    const previous = get().sim;
     const sim = simulate(get().nodes, get().edges, ingressRps ?? c.ingressRps, c.slo);
-    set({ sim });
+    const delta = previous ? compareRuns(previous, sim) : null;
+    const next = { ...sim, delta };
+    set({
+      sim: next,
+      previousSim: previous,
+      simHistory: [...get().simHistory, next.robustness.score].slice(-8),
+    });
+    const deltaNote = delta ? ` · ${delta.direction === "unchanged" ? "same robustness" : `${delta.direction} ${delta.scoreDelta > 0 ? "+" : ""}${delta.scoreDelta}`}` : "";
     get().log(
       actor,
       sim.error
         ? `Simulation failed: ${sim.error}`
-        : `Ran ${Math.round(sim.ingressRps).toLocaleString()} RPS · p99 ${Math.round(sim.p99Ms)}ms · errors ${(sim.errorRate * 100).toFixed(1)}% · ${sim.sloPassed ? "SLO pass" : "SLO miss"}`,
+        : `Ran ${Math.round(sim.ingressRps).toLocaleString()} RPS · robustness ${next.robustness.score} ${next.robustness.grade} · p99 ${Math.round(sim.p99Ms)}ms · errors ${(sim.errorRate * 100).toFixed(1)}% · ${sim.sloPassed ? "SLO pass" : "SLO miss"}${deltaNote}`,
     );
-    return sim;
+    return next;
   },
   undo: () => {
     const past = get().past;

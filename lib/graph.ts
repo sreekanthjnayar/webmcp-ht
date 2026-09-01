@@ -107,7 +107,9 @@ export function callTrees(nodes: ArchNode[], edges: ArchEdge[]): string[][] {
 }
 
 export function defaultProtocol(targetKind: BlockKind): Protocol {
-  return targetKind === "queue" ? "async" : "sync";
+  return targetKind === "queue" || targetKind === "pubsub" || targetKind === "notification"
+    ? "async"
+    : "sync";
 }
 
 export function newBlockId(kind: BlockKind, existing: string[]): string {
