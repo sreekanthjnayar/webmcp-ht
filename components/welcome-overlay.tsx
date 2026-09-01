@@ -1,5 +1,6 @@
 "use client";
 
+import { ArchflowMark, ArchflowWordmark } from "@/components/brand/archflow-mark";
 import { useEffect, useState } from "react";
 
 const AUTO_HIDE_MS = 8000;
@@ -41,9 +42,11 @@ export function WelcomeOverlay() {
       aria-labelledby="archflow-welcome-title"
     >
       <div className="max-w-[26rem] text-center" onClick={(e) => e.stopPropagation()}>
-        <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">Archflow</div>
-        <div className="mx-auto mt-4 h-px w-10 bg-[var(--accent)]/70" />
-        <h1 id="archflow-welcome-title" className="mt-5 text-[22px] leading-snug tracking-[-0.02em] text-[var(--text)]">
+        <ArchflowMark className="mx-auto h-12 w-12" title="Archflow" />
+        <div className="mt-4 text-[15px] font-medium">
+          <ArchflowWordmark />
+        </div>
+        <h1 id="archflow-welcome-title" className="mt-4 text-[22px] leading-snug tracking-[-0.02em] text-[var(--text)]">
           Learn system design together.
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[var(--muted)]">

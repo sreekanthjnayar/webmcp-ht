@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Archflow — system design studio",
   description:
-    "Assemble architectures, simulate traffic, and collaborate with an agent over WebMCP.",
+    "A visual studio where you and an agent share one canvas to learn system design.",
+  applicationName: "Archflow",
 };
 
 export default function RootLayout({

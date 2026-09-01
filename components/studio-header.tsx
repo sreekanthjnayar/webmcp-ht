@@ -1,3 +1,4 @@
+import { ArchflowLockup } from "@/components/brand/archflow-mark";
 import { CHALLENGES } from "@/lib/challenges";
 import { useArchitectureStore } from "@/lib/store";
 import type { SimResult } from "@/lib/types";
@@ -31,10 +32,7 @@ export function StudioHeader() {
 
   return (
     <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-2.5">
-      <div className="min-w-[140px]">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">Archflow</div>
-        <div className="text-[13px] text-[var(--text)]">System design studio</div>
-      </div>
+      <ArchflowLockup />
 
       <nav className="flex min-w-0 flex-1 flex-wrap gap-1">
         {CHALLENGES.map((c) => (
