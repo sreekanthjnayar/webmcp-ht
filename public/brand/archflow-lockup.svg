@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="Archflow">
+  <title>Archflow system design studio</title>
+  <rect width="1280" height="400" fill="#0b0d10"/>
+  <g transform="translate(64 56)">
+    <rect width="288" height="288" rx="72" fill="#11141a"/>
+    <g transform="scale(0.28125)">
+      <path
+        d="M262.4 678.4 L512 332.8 L761.6 678.4"
+        fill="none"
+        stroke="#d4a056"
+        stroke-width="54.4"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      />
+      <rect x="153.6" y="582.4" width="211.2" height="211.2" rx="54.4" fill="#e8c48a"/>
+      <rect x="406.4" y="198.4" width="211.2" height="211.2" rx="54.4" fill="#d4a056"/>
+      <rect x="659.2" y="582.4" width="211.2" height="211.2" rx="54.4" fill="#6dbf8a"/>
+    </g>
+  </g>
+  <text x="400" y="188" fill="#e7e4dc" font-family="Geist" font-size="92" font-weight="500" letter-spacing="-2.4">Arch<tspan fill="#d4a056">flow</tspan></text>
+  <text x="400" y="258" fill="#8b9288" font-family="Geist" font-size="32" letter-spacing="1.2">System design studio</text>
+</svg>
