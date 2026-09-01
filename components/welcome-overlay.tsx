@@ -34,14 +34,23 @@ export function WelcomeOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#0b0d10]/80 p-6 backdrop-blur-[8px] transition-opacity duration-500"
+      className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center p-6 transition-opacity duration-500"
       style={{ opacity: leaving ? 0 : 1 }}
-      onClick={dismiss}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="archflow-welcome-title"
     >
-      <div className="max-w-[26rem] text-center" onClick={(e) => e.stopPropagation()}>
+      <div
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="archflow-welcome-title"
+        className="pointer-events-auto relative w-full max-w-[26rem] rounded-xl border border-[var(--line)] bg-[var(--panel)] px-7 pb-7 pt-8 text-center shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
+      >
+        <button
+          type="button"
+          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--panel-2)] hover:text-[var(--text)]"
+          onClick={dismiss}
+          aria-label="Close welcome"
+        >
+          <CloseIcon />
+        </button>
         <ArchflowMark className="mx-auto h-12 w-12" title="Archflow" />
         <div className="mt-4 text-[15px] font-medium">
           <ArchflowWordmark />
@@ -58,5 +67,19 @@ export function WelcomeOverlay() {
         </button>
       </div>
     </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
+      <path
+        d="M3.2 3.2 L12.8 12.8 M12.8 3.2 L3.2 12.8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
