@@ -1,5 +1,5 @@
 import { ArchflowLockup } from "@/components/brand/archflow-mark";
-import { CHALLENGES } from "@/lib/challenges";
+import { ChallengeSelect } from "@/components/challenge-select";
 import { useArchitectureStore } from "@/lib/store";
 import type { SimResult } from "@/lib/types";
 
@@ -34,23 +34,7 @@ export function StudioHeader() {
     <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-2.5">
       <ArchflowLockup />
 
-      <nav className="flex min-w-0 flex-1 flex-wrap gap-1">
-        {CHALLENGES.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setChallenge(c.id)}
-            className={`rounded-md px-2.5 py-1.5 text-left text-[12px] leading-tight ${
-              c.id === challengeId
-                ? "bg-[var(--panel-2)] text-[var(--text)]"
-                : "text-[var(--muted)] hover:text-[var(--text)]"
-            }`}
-          >
-            <span className="block">{c.title}</span>
-            <span className="block text-[10px] text-[var(--muted)] max-md:hidden">{c.subtitle}</span>
-          </button>
-        ))}
-      </nav>
+      <ChallengeSelect />
 
       <div className="flex flex-wrap items-center gap-2">
         <SimChips sim={sim} />
