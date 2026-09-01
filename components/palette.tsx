@@ -15,7 +15,7 @@ export function Palette() {
           Click to add, or drag onto the canvas. Colors mark the block kind. Connect left to right.
         </p>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto px-2 pb-4 max-md:flex max-md:gap-6 max-md:overflow-x-auto">
+      <div className="arch-scroll min-h-0 flex-1 px-2 pb-4 max-md:flex max-md:gap-6">
         {PALETTE_GROUPS.map((group) => (
           <div key={group.title} className="mb-5 max-md:mb-0 max-md:min-w-[180px]">
             <div className="px-2 pb-2 pt-1 text-[10px] uppercase tracking-[0.14em]" style={{ color: group.accent }}>
