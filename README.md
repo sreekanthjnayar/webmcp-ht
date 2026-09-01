@@ -46,4 +46,6 @@ Open http://localhost:3000. `npm test` covers the four use cases (naive fail / r
 
 Next.js App Router, React Flow, Zustand, `usewebmcp` + `@mcp-b/webmcp-polyfill`. No backend; the tab is the session.
 
-MIT licensed.
+## License
+
+This software is open source, released under the [MIT License](https://opensource.org/licenses/MIT).
