@@ -14,8 +14,8 @@ import {
 import { useCallback, useEffect, useMemo } from "react";
 import { BlockNode } from "@/components/block-node";
 import { PacketEdge } from "@/components/packet-edge";
-import { CATALOG, PALETTE_ORDER } from "@/lib/catalog";
-import type { ArchEdge, ArchNode } from "@/lib/graph";
+import { PALETTE_ORDER, specOf } from "@/lib/catalog";
+import { normalizeNode, type ArchEdge, type ArchNode } from "@/lib/graph";
 import type { BlockKind } from "@/lib/types";
 import { useArchitectureStore } from "@/lib/store";
 
@@ -38,12 +38,20 @@ function CanvasInner() {
 
   const placedNodes = useMemo(
     () =>
-      nodes.map((n) => ({
-        ...n,
-        zIndex: n.id === selectedNodeId ? 1000 : 1,
-      })),
+      nodes.map((n) => {
+        const next = normalizeNode(n);
+        return {
+          ...next,
+          type: "block" as const,
+          zIndex: n.id === selectedNodeId ? 1000 : 1,
+        };
+      }),
     [nodes, selectedNodeId],
   );
+  const placedEdges = useMemo(() => {
+    const ids = new Set(placedNodes.map((n) => n.id));
+    return edges.filter((e) => e?.source && e?.target && ids.has(e.source) && ids.has(e.target));
+  }, [edges, placedNodes]);
 
   useEffect(() => {
     if (layoutNonce <= 0) return;
@@ -83,7 +91,7 @@ function CanvasInner() {
     <ReactFlow<ArchNode, ArchEdge>
       key={challengeId}
       nodes={placedNodes}
-      edges={edges}
+      edges={placedEdges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
@@ -116,10 +124,7 @@ function CanvasInner() {
         pannable
         zoomable
         maskColor="rgba(8,10,12,0.72)"
-        nodeColor={(n) => {
-          const kind = (n.data as { kind?: BlockKind })?.kind;
-          return kind && CATALOG[kind] ? CATALOG[kind].accent : "#3a414d";
-        }}
+        nodeColor={(n) => specOf((n.data as { kind?: BlockKind })?.kind).accent}
       />
     </ReactFlow>
   );

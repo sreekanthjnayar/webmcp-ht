@@ -1,7 +1,7 @@
 "use client";
 
 import { useWebMCP } from "usewebmcp";
-import { CATALOG } from "@/lib/catalog";
+import { CATALOG, isBlockKind } from "@/lib/catalog";
 import { CHALLENGES } from "@/lib/challenges";
 import { beside, defaultAddPosition } from "@/lib/layout";
 import { useArchitectureStore } from "@/lib/store";
@@ -127,12 +127,20 @@ export function WebMcpTools() {
     } as const,
     annotations: { readOnlyHint: false },
     execute: async ({ kind, id, label, nearId, replicas }) => {
-      const s = getStore();
-      const near = nearId ? s.nodes.find((n) => n.id === nearId) : null;
-      const position = near ? beside(near.position) : defaultAddPosition(s.nodes);
-      const newId = s.addNode(kind as BlockKind, position, { id, label, actor: "agent" });
-      if (replicas) s.setNodeProps(newId, { replicas }, "agent");
-      return json({ id: newId });
+      try {
+        if (!isBlockKind(kind)) {
+          return json({ ok: false, error: `Unknown block kind "${kind}". Call get_catalog.` });
+        }
+        const s = getStore();
+        const near = nearId ? s.nodes.find((n) => n.id === nearId) : null;
+        const position = near ? beside(near.position) : defaultAddPosition(s.nodes);
+        const newId = s.addNode(kind, position, { id, label, actor: "agent" });
+        if (!newId) return json({ ok: false, error: `Could not add ${kind}.` });
+        if (replicas) s.setNodeProps(newId, { replicas }, "agent");
+        return json({ ok: true, id: newId });
+      } catch (err) {
+        return json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      }
     },
   });
 
@@ -229,8 +237,12 @@ export function WebMcpTools() {
     } as const,
     annotations: { readOnlyHint: false },
     execute: async ({ ingressRps }) => {
-      const sim = getStore().runSimulation(ingressRps, "agent");
-      return json(sim);
+      try {
+        const sim = getStore().runSimulation(ingressRps, "agent");
+        return json(sim);
+      } catch (err) {
+        return json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      }
     },
   });
 
@@ -246,10 +258,30 @@ export function WebMcpTools() {
     execute: async ({ id }) => {
       const node = getStore().nodes.find((n) => n.id === id);
       if (!node) return json({ ok: false, error: `No block with id ${id}.` });
-      const ok = await getStore().askToConfirm("Remove this block?", `Remove ${node.data.label} (${id}) and its connections.`);
+      const ok = await getStore().askToConfirm("Remove this block?", `Remove ${node.data?.label ?? id} (${id}) and its connections.`);
       if (!ok) return json({ ok: false, cancelled: true });
       const err = getStore().removeNode(id, "agent");
       return json(err ? { ok: false, error: err } : { ok: true });
+    },
+  });
+
+  useWebMCP({
+    name: "repair_graph",
+    description:
+      "Drop dangling edges and remove broken blocks (unknown kinds or corrupt data) so the canvas can run again.",
+    annotations: { readOnlyHint: false },
+    execute: async () => {
+      try {
+        const result = getStore().repairGraph("agent");
+        const s = getStore();
+        return json({
+          ok: true,
+          removed: result.removed,
+          architecture: formatArchitecture(s.challenge(), s.nodes, s.edges, s.sim),
+        });
+      } catch (err) {
+        return json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      }
     },
   });
 
@@ -279,7 +311,7 @@ export function WebMcpTools() {
         const s = getStore();
         if (type === "add_node") {
           const kind = op.kind as BlockKind;
-          if (!CATALOG[kind]) {
+          if (!isBlockKind(String(kind)) || !CATALOG[kind]) {
             results.push({ op, error: "Unknown kind" });
             break;
           }

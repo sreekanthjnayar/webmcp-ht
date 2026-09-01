@@ -194,3 +194,36 @@ describe("robustness feedback", () => {
     expect(toNote?.rps).toBeCloseTo(toWorker?.rps ?? 0, 0);
   });
 });
+
+describe("broken graph simulation", () => {
+  it("does not throw on dangling edges or unknown kinds", () => {
+    const c = challengeById("url-shortener");
+    const nodes: ArchNode[] = [
+      n("client-1", "client"),
+      n("api-1", "api"),
+      {
+        id: "ghost-1",
+        type: "block",
+        position: { x: 0, y: 0 },
+        data: {
+          kind: "spaceship" as BlockKind,
+          label: "UFO",
+          replicas: 1,
+          rpsCapacity: 10,
+          baseLatencyMs: 1,
+          findings: [],
+        },
+      },
+    ];
+    const edges: ArchEdge[] = [
+      e("client-1", "api-1"),
+      e("api-1", "missing"),
+      e("client-1", "ghost-1"),
+    ];
+    const sim = simulate(nodes, edges, c.ingressRps, c.slo);
+    expect(sim.error).toBeUndefined();
+    expect(sim.nodes["ghost-1"]).toBeTruthy();
+    expect(sim.nodes["ghost-1"].overflowRps).toBeGreaterThan(0);
+    expect(sim.robustness.notes.join(" ")).toMatch(/broken/i);
+  });
+});

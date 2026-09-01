@@ -6,6 +6,7 @@ import { Inspector } from "@/components/inspector";
 import { Palette } from "@/components/palette";
 import { WebMcpTools } from "@/components/webmcp-tools";
 import { CHALLENGES } from "@/lib/challenges";
+import { sanitizeGraph } from "@/lib/graph";
 import { useArchitectureStore } from "@/lib/store";
 
 export function SimulatorApp() {
@@ -13,8 +14,12 @@ export function SimulatorApp() {
   const setChallenge = useArchitectureStore((s) => s.setChallenge);
   const runSimulation = useArchitectureStore((s) => s.runSimulation);
   const arrangeLayers = useArchitectureStore((s) => s.arrangeLayers);
+  const repairGraph = useArchitectureStore((s) => s.repairGraph);
   const sim = useArchitectureStore((s) => s.sim);
   const challenge = useArchitectureStore((s) => s.challenge());
+  const nodes = useArchitectureStore((s) => s.nodes);
+  const edges = useArchitectureStore((s) => s.edges);
+  const issues = sanitizeGraph(nodes, edges).issues;
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]">
@@ -79,6 +84,17 @@ export function SimulatorApp() {
           </button>
         </div>
       </header>
+      {issues.length ? (
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-[var(--fail)] px-4 py-1.5 text-[12px] text-[var(--fail)]">
+          <span>
+            {issues.length} graph issue{issues.length === 1 ? "" : "s"}: {issues[0].message}
+            {issues.length > 1 ? ` (+${issues.length - 1} more)` : ""}
+          </span>
+          <button type="button" className="arch-btn" onClick={() => repairGraph("human")}>
+            Repair graph
+          </button>
+        </div>
+      ) : null}
       {sim?.delta ? (
         <div
           className={`shrink-0 border-b border-[var(--line)] px-4 py-1.5 text-[12px] ${

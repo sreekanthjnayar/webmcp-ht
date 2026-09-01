@@ -1,5 +1,5 @@
-import { CATALOG, PALETTE_GROUPS, PALETTE_ORDER } from "./catalog";
-import { callTrees, type ArchEdge, type ArchNode } from "./graph";
+import { CATALOG, PALETTE_GROUPS, PALETTE_ORDER, specOf } from "./catalog";
+import { callTrees, isBrokenNode, normalizeNode, sanitizeGraph, type ArchEdge, type ArchNode } from "./graph";
 import type { Challenge, SimResult } from "./types";
 
 export function formatArchitecture(
@@ -8,6 +8,7 @@ export function formatArchitecture(
   edges: ArchEdge[],
   sim: SimResult | null,
 ) {
+  const graph = sanitizeGraph(nodes, edges);
   return {
     challenge: {
       id: challenge.id,
@@ -18,7 +19,7 @@ export function formatArchitecture(
       ingressRps: challenge.ingressRps,
       slo: challenge.slo,
     },
-    nodes: nodes.map((n) => ({
+    nodes: graph.nodes.map((n) => ({
       id: n.id,
       kind: n.data.kind,
       label: n.data.label,
@@ -30,14 +31,16 @@ export function formatArchitecture(
       locked: Boolean(n.data.locked),
       findings: n.data.findings,
       position: n.position,
+      broken: isBrokenNode(n),
     })),
-    edges: edges.map((e) => ({
+    edges: graph.edges.map((e) => ({
       id: e.id,
       from: e.source,
       to: e.target,
       protocol: e.data?.protocol ?? "sync",
     })),
-    callTrees: callTrees(nodes, edges),
+    callTrees: callTrees(graph.nodes, graph.edges),
+    issues: graph.issues,
     lastSimulation: sim,
   };
 }
@@ -57,41 +60,43 @@ export function formatSelectedNode(
 ) {
   if (!selectedNodeId) {
     return {
-      selected: false,
+      selected: false as const,
       message: "No block is selected. Ask the human to click a node on the canvas, then call get_selected_node again.",
     };
   }
   const node = nodes.find((n) => n.id === selectedNodeId);
   if (!node) {
     return {
-      selected: false,
+      selected: false as const,
       message: `Selection ${selectedNodeId} is no longer on the canvas.`,
     };
   }
-  const spec = CATALOG[node.data.kind];
-  const group = PALETTE_GROUPS.find((g) => g.kinds.includes(node.data.kind));
-  const incoming = edges.filter((e) => e.target === node.id);
-  const outgoing = edges.filter((e) => e.source === node.id);
+  const view = normalizeNode(node);
+  const spec = specOf(view.data.kind);
+  const group = PALETTE_GROUPS.find((g) => g.kinds.includes(view.data.kind as (typeof g.kinds)[number]));
+  const incoming = edges.filter((e) => e.target === view.id);
+  const outgoing = edges.filter((e) => e.source === view.id);
   return {
-    selected: true,
+    selected: true as const,
     node: {
-      id: node.id,
-      kind: node.data.kind,
-      label: node.data.label,
-      replicas: node.data.replicas,
-      rpsCapacity: node.data.rpsCapacity,
+      id: view.id,
+      kind: view.data.kind,
+      label: view.data.label,
+      replicas: view.data.replicas,
+      rpsCapacity: view.data.rpsCapacity,
       capacity:
-        node.data.kind === "client" || node.data.rpsCapacity <= 0
+        view.data.kind === "client" || view.data.rpsCapacity <= 0
           ? "unlimited"
-          : node.data.replicas * node.data.rpsCapacity,
-      baseLatencyMs: node.data.baseLatencyMs,
-      hitRate: node.data.hitRate ?? null,
-      locked: Boolean(node.data.locked),
-      findings: node.data.findings,
-      position: node.position,
+          : view.data.replicas * view.data.rpsCapacity,
+      baseLatencyMs: view.data.baseLatencyMs,
+      hitRate: view.data.hitRate ?? null,
+      locked: Boolean(view.data.locked),
+      findings: view.data.findings,
+      position: view.position,
+      broken: isBrokenNode(view),
     },
     meaning: {
-      kind: spec.kind,
+      kind: view.data.kind,
       label: spec.label,
       group: group?.title ?? "Other",
       short: spec.short,
@@ -113,7 +118,7 @@ export function formatSelectedNode(
         protocol: e.data?.protocol ?? "sync",
       })),
     },
-    simulation: sim?.nodes[node.id] ?? null,
+    simulation: sim?.nodes[view.id] ?? null,
   };
 }
 

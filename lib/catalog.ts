@@ -308,14 +308,37 @@ export const PALETTE_GROUPS: { title: string; accent: string; kinds: BlockKind[]
 
 export const PALETTE_ORDER: BlockKind[] = PALETTE_GROUPS.flatMap((g) => g.kinds);
 
+export const BROKEN_ACCENT = "#e07070";
+
+const BROKEN_SPEC: KindSpec = {
+  kind: "api",
+  label: "Broken",
+  short: "Unknown or corrupt block.",
+  blurb: "This block is not in the catalog. Remove it and add a valid block from the palette.",
+  replicas: 1,
+  rpsCapacity: 0,
+  baseLatencyMs: 0,
+  maxIn: null,
+  maxOut: null,
+  accent: BROKEN_ACCENT,
+};
+
 const KIND_SET = new Set<string>(BLOCK_KINDS);
 export function isBlockKind(value: string): value is BlockKind {
   return KIND_SET.has(value);
 }
 
-export function capacityOf(kind: BlockKind, replicas: number, rpsCapacity: number): number {
+/** Catalog entry for a kind, or a red fallback that never throws. */
+export function specOf(kind: unknown): KindSpec {
+  return typeof kind === "string" && isBlockKind(kind) ? CATALOG[kind] : BROKEN_SPEC;
+}
+
+export function capacityOf(kind: string, replicas: number, rpsCapacity: number): number {
+  if (!isBlockKind(kind)) return 0;
   if (kind === "client" || rpsCapacity <= 0) return Number.POSITIVE_INFINITY;
-  return replicas * rpsCapacity;
+  const copies = Number.isFinite(replicas) ? Math.max(1, replicas) : 1;
+  const per = Number.isFinite(rpsCapacity) ? Math.max(0, rpsCapacity) : 0;
+  return copies * per;
 }
 
 export function isCacheKind(kind: BlockKind): boolean {

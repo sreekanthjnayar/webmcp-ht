@@ -76,8 +76,8 @@ body {
   line-height: 1.5;
 }
 
-.arch-node-selected {
-  z-index: 2;
+.arch-node-broken {
+  border-style: dashed;
 }
 
 .arch-util {

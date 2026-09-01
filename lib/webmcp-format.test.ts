@@ -26,4 +26,21 @@ describe("formatSelectedNode", () => {
     expect(out.neighbors.outgoing).toEqual([]);
     expect(out.simulation).toBeNull();
   });
+
+  it("marks a selected unknown kind as broken", () => {
+    const c = challengeById("url-shortener");
+    const nodes = [
+      ...c.starter.nodes,
+      {
+        ...c.starter.nodes[0],
+        id: "ghost-1",
+        data: { ...c.starter.nodes[0].data, kind: "spaceship" as const, label: "UFO", findings: [] },
+      },
+    ];
+    const out = formatSelectedNode(nodes as typeof c.starter.nodes, c.starter.edges, "ghost-1", null);
+    expect(out.selected).toBe(true);
+    if (!out.selected) return;
+    expect(out.node.broken).toBe(true);
+    expect(out.meaning.label).toBe("Broken");
+  });
 });

@@ -1,8 +1,10 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { CATALOG } from "@/lib/catalog";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { specOf } from "@/lib/catalog";
 import type { ArchNode } from "@/lib/graph";
+import { isBrokenNode, normalizeNode } from "@/lib/graph";
 import { useArchitectureStore } from "@/lib/store";
 
 function utilTone(util: number, overflow: number): string {
@@ -11,24 +13,44 @@ function utilTone(util: number, overflow: number): string {
   return "var(--ok)";
 }
 
-export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
-  const spec = CATALOG[data.kind];
+function BrokenCard({ id, message }: { id: string; message: string }) {
+  const spec = specOf(undefined);
+  return (
+    <div className="arch-node arch-node-broken">
+      <span className="arch-node-rail" style={{ background: spec.accent }} />
+      <Handle type="target" position={Position.Left} className="arch-handle" style={{ background: spec.accent }} />
+      <Handle type="source" position={Position.Right} className="arch-handle" style={{ background: spec.accent }} />
+      <span className="arch-kind-badge" style={{ background: spec.accent, color: "#0c1014" }}>
+        Broken
+      </span>
+      <div className="mt-1.5 truncate text-[13px] font-medium text-[var(--text)]">{id}</div>
+      <p className="mt-2 line-clamp-3 text-[11px] leading-snug text-[var(--fail)]">{message}</p>
+    </div>
+  );
+}
+
+function BlockNodeInner({ id, data, selected }: NodeProps<ArchNode>) {
+  const node = normalizeNode({ id, data, type: "block", position: { x: 0, y: 0 } } as ArchNode);
+  const spec = specOf(node.data.kind);
+  const broken = isBrokenNode(node);
   const sim = useArchitectureStore((s) => s.sim?.nodes[id]);
   const util = sim?.utilization ?? 0;
   const overflow = sim?.overflowRps ?? 0;
-  const bar = Math.min(100, util * 100);
-  const hideTarget = spec.maxIn === 0;
-  const hideSource = spec.maxOut === 0;
+  const bar = Math.min(100, Number.isFinite(util) ? util * 100 : 0);
+  const hideTarget = !broken && spec.maxIn === 0;
+  const hideSource = !broken && spec.maxOut === 0;
   const cap =
-    data.kind === "client" || data.rpsCapacity <= 0
-      ? "∞"
-      : `${(data.replicas * data.rpsCapacity).toLocaleString()} rps`;
+    node.data.kind === "client" || node.data.rpsCapacity <= 0
+      ? broken
+        ? "0 rps"
+        : "∞"
+      : `${(node.data.replicas * node.data.rpsCapacity).toLocaleString()} rps`;
   const fill = `color-mix(in srgb, ${spec.accent} ${selected ? 34 : 24}%, #10151c)`;
   const border = `color-mix(in srgb, ${spec.accent} ${selected ? 88 : 58}%, #1c222c)`;
 
   return (
     <div
-      className={`arch-node ${selected ? "arch-node-selected" : ""}`}
+      className={`arch-node ${selected ? "arch-node-selected" : ""} ${broken ? "arch-node-broken" : ""}`}
       style={{
         borderColor: border,
         background: fill,
@@ -66,14 +88,14 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
           >
             {spec.label}
           </span>
-          {data.locked ? <span className="ml-1.5 text-[10px] text-[var(--muted)]">locked</span> : null}
-          <div className="mt-1.5 truncate text-[13px] font-medium text-[var(--text)]">{data.label}</div>
+          {node.data.locked ? <span className="ml-1.5 text-[10px] text-[var(--muted)]">locked</span> : null}
+          <div className="mt-1.5 truncate text-[13px] font-medium text-[var(--text)]">{node.data.label}</div>
         </div>
         <div className="font-mono text-[10px] text-[var(--muted)]">{id}</div>
       </div>
 
       <div className="mt-2 flex items-baseline justify-between gap-2 font-mono text-[11px] text-[var(--muted)]">
-        <span>{data.replicas}× · {cap}</span>
+        <span>{node.data.replicas}× · {cap}</span>
         {sim ? (
           <span style={{ color: utilTone(util, overflow) }}>
             {Math.round(util * 100)}%
@@ -92,11 +114,21 @@ export function BlockNode({ id, data, selected }: NodeProps<ArchNode>) {
         />
       </div>
 
-      {data.findings[0] ? (
-        <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-[var(--warn)]">
-          {data.findings[0].message}
+      {node.data.findings[0] ? (
+        <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-[var(--fail)]">
+          {node.data.findings[0].message}
         </p>
       ) : null}
     </div>
+  );
+}
+
+export function BlockNode(props: NodeProps<ArchNode>) {
+  return (
+    <ErrorBoundary
+      fallback={<BrokenCard id={props.id} message="This block failed to render. Select it and remove it, or Repair graph." />}
+    >
+      <BlockNodeInner {...props} />
+    </ErrorBoundary>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { BaseEdge, getBezierPath, type EdgeProps } from "@xyflow/react";
-import { CATALOG } from "@/lib/catalog";
+import { specOf } from "@/lib/catalog";
 import { useArchitectureStore } from "@/lib/store";
 import type { ArchEdge } from "@/lib/graph";
 
@@ -24,7 +24,7 @@ export function PacketEdge({
   const sourceKind = useArchitectureStore(
     (s) => s.nodes.find((n) => n.id === source)?.data.kind,
   );
-  const accent = sourceKind ? CATALOG[sourceKind].accent : "var(--edge)";
+  const accent = sourceKind ? specOf(sourceKind).accent : "var(--edge)";
   const [path] = getBezierPath({
     sourceX,
     sourceY,

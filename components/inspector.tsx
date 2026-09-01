@@ -1,6 +1,7 @@
 "use client";
 
-import { CATALOG } from "@/lib/catalog";
+import { specOf } from "@/lib/catalog";
+import { isBrokenNode, normalizeNode } from "@/lib/graph";
 import { useArchitectureStore } from "@/lib/store";
 
 export function Inspector() {
@@ -10,45 +11,61 @@ export function Inspector() {
   const sim = useArchitectureStore((s) => s.sim);
   const activity = useArchitectureStore((s) => s.activity);
   const setNodeProps = useArchitectureStore((s) => s.setNodeProps);
+  const removeNode = useArchitectureStore((s) => s.removeNode);
   const undo = useArchitectureStore((s) => s.undo);
   const canUndo = useArchitectureStore((s) => s.past.length > 0);
+  const view = node ? normalizeNode(node) : null;
+  const spec = view ? specOf(view.data.kind) : null;
+  const broken = view ? isBrokenNode(view) : false;
 
   return (
     <aside className="flex h-full min-h-0 w-[320px] shrink-0 flex-col border-l border-[var(--line)] bg-[var(--panel)] max-md:w-full max-md:border-l-0 max-md:border-t">
       <div className="arch-scroll min-h-0 flex-1" style={{ overflow: "auto" }}>
-        {node ? (
+        {view && spec ? (
           <section className="border-b border-[var(--line)] px-4 py-4">
             <div
               className="flex items-center gap-2 rounded-md px-2 py-1.5"
-              style={{ background: `color-mix(in srgb, ${CATALOG[node.data.kind].accent} 16%, transparent)` }}
+              style={{ background: `color-mix(in srgb, ${spec.accent} 16%, transparent)` }}
             >
               <span
                 className="h-3.5 w-3.5 shrink-0 rounded-sm"
-                style={{ background: CATALOG[node.data.kind].accent }}
+                style={{ background: spec.accent }}
               />
               <div
                 className="text-[10px] uppercase tracking-[0.16em]"
-                style={{ color: CATALOG[node.data.kind].accent }}
+                style={{ color: spec.accent }}
               >
-                {CATALOG[node.data.kind].label}
+                {spec.label}
               </div>
             </div>
-            <h2 className="mt-1 text-sm text-[var(--text)]">{node.data.label}</h2>
-            <p className="mt-1 font-mono text-[11px] text-[var(--muted)]">{node.id}</p>
-            <p className="mt-2 text-[12px] leading-relaxed text-[var(--muted)]">
-              {CATALOG[node.data.kind].blurb}
-            </p>
+            <h2 className="mt-1 text-sm text-[var(--text)]">{view.data.label}</h2>
+            <p className="mt-1 font-mono text-[11px] text-[var(--muted)]">{view.id}</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-[var(--muted)]">{spec.blurb}</p>
+            {broken ? (
+              <div className="mt-3 rounded-md border border-[var(--fail)] px-3 py-2 text-[12px] text-[var(--fail)]">
+                {view.data.findings[0]?.message ?? "This block is broken."}
+                <button
+                  type="button"
+                  className="arch-btn mt-2 block"
+                  onClick={() => removeNode(view.id, "human")}
+                >
+                  Remove broken block
+                </button>
+              </div>
+            ) : null}
 
+            {!broken ? (
+            <>
             <label className="mt-4 block text-[11px] text-[var(--muted)]">
               Name
               <input
                 className="arch-input mt-1"
-                value={node.data.label}
-                onChange={(e) => setNodeProps(node.id, { label: e.target.value }, "human")}
+                value={view.data.label}
+                onChange={(e) => setNodeProps(view.id, { label: e.target.value }, "human")}
               />
             </label>
 
-            {node.data.kind !== "client" ? (
+            {view.data.kind !== "client" ? (
               <label className="mt-3 block text-[11px] text-[var(--muted)]">
                 Replicas
                 <input
@@ -56,15 +73,15 @@ export function Inspector() {
                   type="number"
                   min={1}
                   max={32}
-                  value={node.data.replicas}
+                  value={view.data.replicas}
                   onChange={(e) =>
-                    setNodeProps(node.id, { replicas: Number(e.target.value) }, "human")
+                    setNodeProps(view.id, { replicas: Number(e.target.value) }, "human")
                   }
                 />
               </label>
             ) : null}
 
-            {node.data.kind !== "client" ? (
+            {view.data.kind !== "client" ? (
               <label className="mt-3 block text-[11px] text-[var(--muted)]">
                 RPS per replica
                 <input
@@ -72,26 +89,26 @@ export function Inspector() {
                   type="number"
                   min={100}
                   step={100}
-                  value={node.data.rpsCapacity}
+                  value={view.data.rpsCapacity}
                   onChange={(e) =>
-                    setNodeProps(node.id, { rpsCapacity: Number(e.target.value) }, "human")
+                    setNodeProps(view.id, { rpsCapacity: Number(e.target.value) }, "human")
                   }
                 />
               </label>
             ) : null}
 
-            {node.data.hitRate != null ? (
+            {view.data.hitRate != null ? (
               <label className="mt-3 block text-[11px] text-[var(--muted)]">
-                Hit rate {(node.data.hitRate * 100).toFixed(0)}%
+                Hit rate {(view.data.hitRate * 100).toFixed(0)}%
                 <input
                   className="mt-2 w-full accent-[var(--accent)]"
                   type="range"
                   min={0.5}
                   max={0.99}
                   step={0.01}
-                  value={node.data.hitRate}
+                  value={view.data.hitRate}
                   onChange={(e) =>
-                    setNodeProps(node.id, { hitRate: Number(e.target.value) }, "human")
+                    setNodeProps(view.id, { hitRate: Number(e.target.value) }, "human")
                   }
                 />
               </label>
@@ -100,26 +117,28 @@ export function Inspector() {
             <label className="mt-4 flex items-center gap-2 text-[12px] text-[var(--text)]">
               <input
                 type="checkbox"
-                checked={Boolean(node.data.locked)}
-                onChange={(e) => setNodeProps(node.id, { locked: e.target.checked }, "human")}
+                checked={Boolean(view.data.locked)}
+                onChange={(e) => setNodeProps(view.id, { locked: e.target.checked }, "human")}
               />
               Lock (agent cannot change)
             </label>
+            </>
+            ) : null}
 
-            {sim?.nodes[node.id] ? (
+            {sim?.nodes[view.id] ? (
               <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 font-mono text-[11px]">
                 <dt className="text-[var(--muted)]">In</dt>
-                <dd>{Math.round(sim.nodes[node.id].incomingRps).toLocaleString()} rps</dd>
+                <dd>{Math.round(sim.nodes[view.id].incomingRps).toLocaleString()} rps</dd>
                 <dt className="text-[var(--muted)]">Drop</dt>
-                <dd>{Math.round(sim.nodes[node.id].overflowRps).toLocaleString()} rps</dd>
+                <dd>{Math.round(sim.nodes[view.id].overflowRps).toLocaleString()} rps</dd>
                 <dt className="text-[var(--muted)]">Util</dt>
-                <dd>{Math.round(sim.nodes[node.id].utilization * 100)}%</dd>
+                <dd>{Math.round(sim.nodes[view.id].utilization * 100)}%</dd>
                 <dt className="text-[var(--muted)]">Added</dt>
-                <dd>{sim.nodes[node.id].addedLatencyMs.toFixed(1)} ms</dd>
-                {sim.nodes[node.id].queueLagMs > 0 ? (
+                <dd>{sim.nodes[view.id].addedLatencyMs.toFixed(1)} ms</dd>
+                {sim.nodes[view.id].queueLagMs > 0 ? (
                   <>
                     <dt className="text-[var(--muted)]">Lag</dt>
-                    <dd>{Math.round(sim.nodes[node.id].queueLagMs)} ms</dd>
+                    <dd>{Math.round(sim.nodes[view.id].queueLagMs)} ms</dd>
                   </>
                 ) : null}
               </dl>

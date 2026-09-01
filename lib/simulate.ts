@@ -1,5 +1,5 @@
-import { CATALOG, capacityOf, isBufferKind, isCacheKind, isFanoutKind } from "./catalog";
-import { topologicalOrder, type ArchEdge, type ArchNode } from "./graph";
+import { capacityOf, isBufferKind, isCacheKind, isFanoutKind, specOf } from "./catalog";
+import { sanitizeGraph, topologicalOrder, type ArchEdge, type ArchNode } from "./graph";
 import { emptyRobustness, scoreRobustness } from "./robustness";
 import { evaluateSlo } from "./slo";
 import type { SimEdgeResult, SimNodeResult, SimResult, Slo } from "./types";
@@ -22,6 +22,37 @@ export function simulate(
   ingressRps: number,
   slo: Slo,
 ): SimResult {
+  try {
+    return simulateInner(nodes, edges, ingressRps, slo);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Simulation crashed.";
+    return finish(
+      nodes,
+      edges,
+      {
+        ingressRps,
+        p99Ms: 0,
+        errorRate: 1,
+        maxQueueLagMs: 0,
+        hottestPath: [],
+        bottlenecks: [],
+        nodes: Object.fromEntries((nodes ?? []).map((n) => [n.id, { ...EMPTY_NODE }])),
+        edges: Object.fromEntries((edges ?? []).map((e) => [e.id, { rps: 0 }])),
+        error: `Simulation failed: ${message}`,
+      },
+      slo,
+    );
+  }
+}
+
+function simulateInner(
+  rawNodes: ArchNode[],
+  rawEdges: ArchEdge[],
+  ingressRps: number,
+  slo: Slo,
+): SimResult {
+  const { nodes, edges, issues } = sanitizeGraph(rawNodes, rawEdges);
+  const broken = issues.filter((i) => i.code === "unknown_kind");
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const order = topologicalOrder(nodes, edges);
   if (!order) {
@@ -32,8 +63,8 @@ export function simulate(
       maxQueueLagMs: 0,
       hottestPath: [] as string[],
       bottlenecks: [] as string[],
-      nodes: {} as Record<string, SimNodeResult>,
-      edges: {} as Record<string, SimEdgeResult>,
+      nodes: Object.fromEntries(nodes.map((n) => [n.id, { ...EMPTY_NODE }])),
+      edges: Object.fromEntries(edges.map((e) => [e.id, { rps: 0 }])),
       error: "Cycle detected. Disconnect a back-edge, then run again.",
     };
     return finish(nodes, edges, failed, slo);
@@ -69,8 +100,9 @@ export function simulate(
   for (const e of edges) edgeResult[e.id] = { rps: 0 };
 
   for (const id of order) {
-    const node = nodeById.get(id)!;
-    const spec = CATALOG[node.data.kind];
+    const node = nodeById.get(id);
+    if (!node) continue;
+    const spec = specOf(node.data.kind);
     const inc = incoming.get(id) ?? 0;
     const cap = capacityOf(node.data.kind, node.data.replicas, node.data.rpsCapacity);
     const util = cap === Number.POSITIVE_INFINITY ? 0 : cap === 0 ? 1 : inc / cap;
@@ -146,7 +178,17 @@ export function simulate(
     nodes: nodeResult,
     edges: edgeResult,
   };
-  return finish(nodes, edges, base, slo);
+  const result = finish(nodes, edges, base, slo);
+  if (broken.length) {
+    result.robustness = {
+      ...result.robustness,
+      notes: [
+        `${broken.length} broken block${broken.length === 1 ? "" : "s"} on the canvas — traffic into them is dropped.`,
+        ...result.robustness.notes,
+      ],
+    };
+  }
+  return result;
 }
 
 function finish(

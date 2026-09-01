@@ -1,8 +1,17 @@
 import { applyEdgeChanges, applyNodeChanges, type Connection, type EdgeChange, type NodeChange } from "@xyflow/react";
 import { create } from "zustand";
-import { CATALOG } from "./catalog";
+import { CATALOG, isBlockKind } from "./catalog";
 import { CHALLENGES, challengeById, type PlayableChallenge } from "./challenges";
-import { connectError, defaultProtocol, newBlockId, type ArchEdge, type ArchNode } from "./graph";
+import {
+  connectError,
+  defaultProtocol,
+  finiteNumber,
+  newBlockId,
+  normalizeNode,
+  repairBrokenGraph,
+  type ArchEdge,
+  type ArchNode,
+} from "./graph";
 import { findFreePosition, layoutLayers } from "./layout";
 import { compareRuns } from "./robustness";
 import { simulate } from "./simulate";
@@ -67,6 +76,7 @@ interface ArchitectureState {
   setEdgeProtocol: (id: string, protocol: Protocol) => void;
   selectNode: (id: string | null) => void;
   runSimulation: (ingressRps?: number, actor?: "human" | "agent") => SimResult;
+  repairGraph: (actor?: "human" | "agent") => { removed: string[] };
   undo: () => void;
   askToConfirm: (title: string, body: string) => Promise<boolean>;
   resolveConfirm: (ok: boolean) => void;
@@ -75,11 +85,14 @@ interface ArchitectureState {
 
 function cloneGraph(nodes: ArchNode[], edges: ArchEdge[]): Snapshot {
   return {
-    nodes: nodes.map((n) => ({
-      ...n,
-      position: { ...n.position },
-      data: { ...n.data, findings: n.data.findings.map((f) => ({ ...f })) },
-    })),
+    nodes: nodes.map((n) => {
+      const node = normalizeNode(n);
+      return {
+        ...node,
+        position: { ...node.position },
+        data: { ...node.data, findings: node.data.findings.map((f) => ({ ...f })) },
+      };
+    }),
     edges: edges.map((e) => ({ ...e, data: { ...e.data! } })),
   };
 }
@@ -140,6 +153,10 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
   },
   addNode: (kind, position, opts) => {
     const { nodes } = get();
+    if (!isBlockKind(kind) || !CATALOG[kind]) {
+      get().log(opts?.actor ?? "human", `Cannot add unknown block kind "${String(kind)}"`);
+      return "";
+    }
     pushUndo(set, get);
     const spec = CATALOG[kind];
     const id = opts?.id && !nodes.some((n) => n.id === opts.id) ? opts.id : newBlockId(kind, nodes.map((n) => n.id));
@@ -238,7 +255,15 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
               data: {
                 ...n.data,
                 ...patch,
-                replicas: patch.replicas != null ? Math.max(1, Math.round(patch.replicas)) : n.data.replicas,
+                replicas: patch.replicas != null ? Math.max(1, Math.round(finiteNumber(patch.replicas, n.data.replicas))) : n.data.replicas,
+                rpsCapacity:
+                  patch.rpsCapacity != null
+                    ? Math.max(0, finiteNumber(patch.rpsCapacity, n.data.rpsCapacity))
+                    : n.data.rpsCapacity,
+                hitRate:
+                  patch.hitRate != null
+                    ? Math.min(0.99, Math.max(0, finiteNumber(patch.hitRate, n.data.hitRate ?? 0)))
+                    : n.data.hitRate,
               },
             }
           : n,
@@ -287,6 +312,23 @@ export const useArchitectureStore = create<ArchitectureState>((set, get) => ({
         : `Ran ${Math.round(sim.ingressRps).toLocaleString()} RPS · robustness ${next.robustness.score} ${next.robustness.grade} · p99 ${Math.round(sim.p99Ms)}ms · errors ${(sim.errorRate * 100).toFixed(1)}% · ${sim.sloPassed ? "SLO pass" : "SLO miss"}${deltaNote}`,
     );
     return next;
+  },
+  repairGraph: (actor = "human") => {
+    const { nodes, edges, removed } = repairBrokenGraph(get().nodes, get().edges);
+    pushUndo(set, get);
+    set({
+      nodes,
+      edges,
+      sim: null,
+      selectedNodeId: removed.includes(get().selectedNodeId ?? "") ? null : get().selectedNodeId,
+    });
+    get().log(
+      actor,
+      removed.length
+        ? `Repaired graph · removed ${removed.join(", ")}`
+        : "Repaired graph · dropped dangling edges",
+    );
+    return { removed };
   },
   undo: () => {
     const past = get().past;
