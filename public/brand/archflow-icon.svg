@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Archflow">
+  <title>Archflow</title>
+  <rect width="1024" height="1024" rx="256" fill="#11141a"/>
+  <path
+    d="M262.4 678.4 L512 332.8 L761.6 678.4"
+    fill="none"
+    stroke="#d4a056"
+    stroke-width="54.4"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+  <rect x="153.6" y="582.4" width="211.2" height="211.2" rx="54.4" fill="#e8c48a"/>
+  <rect x="406.4" y="198.4" width="211.2" height="211.2" rx="54.4" fill="#d4a056"/>
+  <rect x="659.2" y="582.4" width="211.2" height="211.2" rx="54.4" fill="#6dbf8a"/>
+</svg>
